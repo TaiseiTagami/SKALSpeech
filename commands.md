@@ -9,4 +9,6 @@ After installing the project, inspect the live CLI reference with:
 skalspeech --help
 skalspeech slice --help
 skalspeech textgrid-to-csv --help
+skalspeech csv --help
+skalspeech csv insert --help
 ```

@@ -46,6 +46,31 @@ Available commands:
 | `slice` | Create WAV and TXT files for intervals in a selected TextGrid tier. |
 | `convert` | Alias for the TextGrid conversion command. |
 | `textgrid-to-csv` | Sample a TextGrid into a time-based CSV or export interval rows. |
+| `csv insert` | Insert columns from one CSV into another CSV. |
+
+## Insert CSV Columns
+
+The `csv insert` command matches data rows from a source CSV with rows in a
+destination CSV and writes the combined result to a new CSV. All source
+columns are inserted at the beginning by default:
+
+```powershell
+python main.py csv insert source.csv destination.csv combined.csv
+```
+
+Use repeatable `--column` options to select source columns. Use `--position 0`
+for the beginning, `--position -1` for the end, or another zero-based
+destination column number. Alternatively, insert before a destination header:
+
+```powershell
+python main.py csv insert source.csv destination.csv combined.csv `
+	--column 1 --position -1
+python main.py csv insert source.csv destination.csv combined.csv `
+	--before-header words
+```
+
+The source and destination must have the same number of data rows. The header
+row is preserved and expanded with the inserted source headers.
 
 ## Slice Audio from a TextGrid
 
