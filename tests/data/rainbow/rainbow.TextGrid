@@ -1,0 +1,42 @@
+File type = "ooTextFile"
+Object class = "TextGrid"
+
+xmin = 0 
+xmax = 47.92070833333333 
+tiers? <exists> 
+size = 1 
+item []: 
+    item [1]:
+        class = "IntervalTier" 
+        name = "audio" 
+        xmin = 0 
+        xmax = 47.92070833333333 
+        intervals: size = 7 
+        intervals [1]:
+            xmin = 0 
+            xmax = 0.5366979628603105 
+            text = "  " 
+        intervals [2]:
+            xmin = 0.5366979628603105 
+            xmax = 1.8079752957376047 
+            text = "the rainbow" 
+        intervals [3]:
+            xmin = 1.8079752957376047 
+            xmax = 9.798861388109168 
+            text = "when the sunlight strikes raindrops in the air they act like a prism and form a rainbow" 
+        intervals [4]:
+            xmin = 9.798861388109168 
+            xmax = 16.00390551286739 
+            text = "a rainbow is a division of white light and many beautiful colors" 
+        intervals [5]:
+            xmin = 16.00390551286739 
+            xmax = 19.515052432242776 
+            text = "these take the shape of a large round arCH" 
+        intervals [6]:
+            xmin = 19.515052432242776 
+            xmax = 25.931976112480545 
+            text = "with its path high above and its two ends appearing beyond the horizon" 
+        intervals [7]:
+            xmin = 25.931976112480545 
+            xmax = 47.92070833333333 
+            text = "there is according to legends a boiling pot of gold" 

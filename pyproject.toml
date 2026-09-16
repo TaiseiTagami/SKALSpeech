@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skalspeech"
+version = "0.1.0"
+description = "CLI tools for slicing speech recordings and converting Praat TextGrids."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "praatio>=6.0",
+    "soundfile>=0.12",
+    "typer>=0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[project.scripts]
+skalspeech = "skalspeech.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
