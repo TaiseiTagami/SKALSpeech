@@ -46,7 +46,24 @@ Available commands:
 | `slice` | Create WAV and TXT files for intervals in a selected TextGrid tier. |
 | `convert` | Alias for the TextGrid conversion command. |
 | `textgrid-to-csv` | Sample a TextGrid into a time-based CSV or export interval rows. |
+| `csv from-txt` | Convert a delimited text table into a CSV file. |
 | `csv insert` | Insert columns from one CSV into another CSV. |
+
+## Convert Text Tables to CSV
+
+Use `csv from-txt` for tab-separated text tables such as exported sensor
+data. The first row is used as the CSV header, and tab separation is the
+default:
+
+```powershell
+python main.py csv from-txt input.txt output.csv
+```
+
+For another delimiter, pass `--delimiter`:
+
+```powershell
+python main.py csv from-txt input.txt output.csv --delimiter ";"
+```
 
 ## Insert CSV Columns
 
@@ -102,8 +119,7 @@ recording_2.wav
 recording_2.txt
 ```
 
-The command preserves the source sample rate, skips zero-length intervals,
-and includes empty-label intervals as long as they have a positive duration.
+The command preserves the source sample as long as they have a positive duration.
 The selected tier must exist in the TextGrid.
 
 ## Convert Intervals to a Time-Based CSV

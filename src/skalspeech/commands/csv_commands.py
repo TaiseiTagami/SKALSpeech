@@ -3,9 +3,42 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
+import pandas as pd
 
 
 csv_app = typer.Typer(help="Commands for working with CSV files.")
+
+
+@csv_app.command("from-txt")
+def from_txt_command(
+    input_txt: Path,
+    output_csv: Path,
+    delimiter: str = typer.Option(
+        "\t",
+        "--delimiter",
+        "-d",
+        help="Input column delimiter. Defaults to a tab character.",
+    ),
+) -> None:
+    """Convert a delimited text table into a CSV file."""
+    if not input_txt.exists():
+        raise typer.BadParameter(f"Text file does not exist: {input_txt}")
+    if not delimiter:
+        raise typer.BadParameter("Delimiter cannot be empty.")
+
+    try:
+        data = pd.read_csv(
+            input_txt,
+            sep=delimiter,
+            dtype=str,
+            keep_default_na=False,
+        )
+    except (OSError, pd.errors.ParserError, UnicodeDecodeError) as error:
+        raise typer.BadParameter(f"Could not read text table: {error}")
+
+    output_csv.parent.mkdir(parents=True, exist_ok=True)
+    data.to_csv(output_csv, index=False)
+    print(f"Wrote: {output_csv} ({len(data)} rows, {len(data.columns)} columns)")
 
 
 def _read_csv(path: Path) -> List[List[str]]:

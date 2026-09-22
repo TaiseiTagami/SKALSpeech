@@ -10,5 +10,6 @@ skalspeech --help
 skalspeech slice --help
 skalspeech textgrid-to-csv --help
 skalspeech csv --help
+skalspeech csv from-txt --help
 skalspeech csv insert --help
 ```

@@ -36,6 +36,21 @@ def test_insert_defaults_to_all_source_columns_at_beginning(tmp_path: Path):
     ]
 
 
+def test_from_txt_converts_tab_separated_data(tmp_path: Path):
+    input_txt = tmp_path / "input.txt"
+    output = tmp_path / "output.csv"
+    input_txt.write_text("name\tvalue\nalpha\t1.5\nbeta\t\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["csv", "from-txt", str(input_txt), str(output)])
+
+    assert result.exit_code == 0, result.stdout
+    assert read_csv(output) == [
+        ["name", "value"],
+        ["alpha", "1.5"],
+        ["beta", ""],
+    ]
+
+
 def test_insert_selected_column_at_end(tmp_path: Path):
     source = tmp_path / "source.csv"
     destination = tmp_path / "destination.csv"
