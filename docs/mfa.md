@@ -17,5 +17,7 @@ skalspeech mfa validate corpus dictionary.dict --verbose
 skalspeech mfa align corpus dictionary.dict acoustic_model.zip output
 ```
 
-MFA must be installed and available on `PATH`. Its exit code is returned by
+If an environment was saved with `skalspeech environment set <name>` and Conda
+is available on `PATH`, SKALSpeech automatically runs MFA in that environment.
+Otherwise, MFA must be available on `PATH`. Its exit code is returned by
 SKALSpeech.

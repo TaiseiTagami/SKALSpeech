@@ -32,12 +32,13 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 ```
 
-Before running an alignment, activate the Conda environment containing MFA.
-Then invoke SKALSpeech with the project environment's Python explicitly so
-the two environments remain separate:
+Before running an alignment, save the Conda environment containing MFA.
+SKALSpeech will automatically run MFA in that environment, so it does not need
+to be activated in the current shell. Invoke SKALSpeech with the project
+environment's Python explicitly so the two environments remain separate:
 
 ```powershell
-conda activate aligner
+skalspeech environment set aligner
 mfa version
 .\.venv\Scripts\python.exe main.py --help
 ```
@@ -45,7 +46,6 @@ mfa version
 From the project directory, the final command is:
 
 ```powershell
-conda activate aligner
 .\.venv\Scripts\python.exe main.py align `
 	corpus dictionary.dict acoustic_model.zip output
 ```
@@ -172,7 +172,9 @@ The selected tier must exist in the TextGrid.
 ## Align with MFA
 
 The `mfa` command passes any MFA command and its arguments through unchanged.
-MFA itself must be installed separately and available on `PATH`:
+MFA itself must be installed separately. If a Conda environment was saved with
+`skalspeech environment set <name>`, SKALSpeech looks for MFA there
+automatically; otherwise MFA must be available on `PATH`:
 
 ```powershell
 skalspeech mfa validate corpus dictionary.dict --verbose
