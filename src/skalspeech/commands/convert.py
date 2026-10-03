@@ -74,6 +74,7 @@ def _write_sampled_csv(
     tier_names: List[str],
     frequency: float,
     total_time: float,
+    include_instances: bool = False,
 ) -> int:
     row_count = int(total_time * frequency)
     if row_count == 0 and total_time > 0:
@@ -81,17 +82,49 @@ def _write_sampled_csv(
 
     with output_path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)
-        writer.writerow(("time", *tier_names))
+        columns = ["time"]
+        for tier_name in tier_names:
+            columns.extend((tier_name, f"{tier_name}_int"))
+            if include_instances:
+                columns.append(f"{tier_name}_instance")
+        writer.writerow(columns)
+
+        instance_numbers_by_tier: Dict[str, List[Optional[int]]] = {}
+        for tier_name in tier_names:
+            next_instance_by_label: Dict[str, int] = {}
+            instance_numbers: List[Optional[int]] = []
+            for _, _, label in intervals_by_tier[tier_name]:
+                if label:
+                    instance = next_instance_by_label.get(label, 0)
+                    next_instance_by_label[label] = instance + 1
+                    instance_numbers.append(instance)
+                else:
+                    instance_numbers.append(None)
+            instance_numbers_by_tier[tier_name] = instance_numbers
+
         for sample_number in range(row_count):
             timestamp = sample_number / frequency
             labels = []
             for tier_name in tier_names:
                 label = ""
-                for start, end, interval_label in intervals_by_tier[tier_name]:
+                interval_number = ""
+                instance_number = ""
+                for interval_index, (start, end, interval_label) in enumerate(
+                    intervals_by_tier[tier_name]
+                ):
                     if start <= timestamp < end:
                         label = interval_label
+                        interval_number = interval_index
+                        if include_instances:
+                            instance = instance_numbers_by_tier[tier_name][
+                                interval_index
+                            ]
+                            if instance is not None:
+                                instance_number = instance
                         break
-                labels.append(label)
+                labels.extend((label, interval_number))
+                if include_instances:
+                    labels.append(instance_number)
             writer.writerow((timestamp, *labels))
     return row_count
 
@@ -115,6 +148,12 @@ def convert_command(
         "--intervals",
         "--legacy",
         help="Write the tier,start,end,label format instead.",
+    ),
+    include_instances: bool = typer.Option(
+        False,
+        "--instances",
+        "--include-instances",
+        help="Add per-label occurrence numbers for each selected tier.",
     ),
 ) -> None:
     """Convert a TextGrid into sampled or interval-row CSV files."""
@@ -155,7 +194,8 @@ def convert_command(
     print(f"Tiers: {', '.join(selected)}")
     print(f"Tier count: {len(selected)}")
     print(f"Frequency: {frequency:g} Hz")
-    print(f"Columns: {len(selected) + 1}")
+    columns_per_tier = 3 if include_instances else 2
+    print(f"Columns: {1 + len(selected) * columns_per_tier}")
     print(f"Total time: {total_time:g} seconds")
     for name, path in paths.items():
         rows = _write_sampled_csv(
@@ -164,6 +204,7 @@ def convert_command(
             [name] if separate else selected,
             frequency,
             total_time,
+            include_instances,
         )
         print(f"Wrote: {path}")
         print(f"Rows: {rows}")

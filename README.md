@@ -21,8 +21,40 @@ Install the project and its dependencies:
 python -m pip install -e ".[dev]"
 ```
 
+MFA and SKALSpeech can use separate environments. This is usually preferable
+when their dependencies may conflict. Install SKALSpeech in its own virtual
+environment:
+
+```powershell
+cd path\to\SKALSpeech
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+```
+
+Before running an alignment, activate the Conda environment containing MFA.
+Then invoke SKALSpeech with the project environment's Python explicitly so
+the two environments remain separate:
+
+```powershell
+conda activate aligner
+mfa version
+.\.venv\Scripts\python.exe main.py --help
+```
+
+From the project directory, the final command is:
+
+```powershell
+conda activate aligner
+.\.venv\Scripts\python.exe main.py align `
+	corpus dictionary.dict acoustic_model.zip output
+```
+
 The same activation and installation notes are also available in
 [`help.md`](help.md).
+
+Detailed documentation for every command is available in the
+[`docs`](docs/README.md) folder.
 
 ## Running Commands
 
@@ -31,6 +63,18 @@ After installation, run the CLI from any directory:
 ```powershell
 skalspeech --help
 ```
+
+To save the Conda environment that SKALSpeech should open and launch it in a
+new PowerShell window:
+
+```powershell
+skalspeech environment set aligner
+skalspeech environment open
+```
+
+The `open` command starts a new shell because a command-line program cannot
+activate the PowerShell session that launched it. The current shell is not
+changed.
 
 For a checkout without installing it, `python main.py` remains available:
 
@@ -44,6 +88,9 @@ Available commands:
 | --- | --- |
 | `version` | Print the application version. |
 | `slice` | Create WAV and TXT files for intervals in a selected TextGrid tier. |
+| `mfa` | Pass any MFA command through to MFA. |
+| `align` | Alias for `mfa align` with named positional arguments. |
+| `environment` | Configure and open a Conda environment. |
 | `convert` | Alias for the TextGrid conversion command. |
 | `textgrid-to-csv` | Sample a TextGrid into a time-based CSV or export interval rows. |
 | `csv from-txt` | Convert a delimited text table into a CSV file. |
@@ -121,6 +168,31 @@ recording_2.txt
 
 The command preserves the source sample as long as they have a positive duration.
 The selected tier must exist in the TextGrid.
+
+## Align with MFA
+
+The `mfa` command passes any MFA command and its arguments through unchanged.
+MFA itself must be installed separately and available on `PATH`:
+
+```powershell
+skalspeech mfa validate corpus dictionary.dict --verbose
+```
+
+`align` is a convenience alias for `mfa align`. It accepts the standard MFA
+alignment positional fields and any additional MFA options:
+
+```powershell
+skalspeech align <corpus_directory> <dictionary_path> `
+	<acoustic_model_path> <output_directory> [MFA options]
+```
+
+For example:
+
+```powershell
+skalspeech align corpus dictionary.dict english.zip output `
+	--clean --single_speaker
+```
+
 
 ## Convert Intervals to a Time-Based CSV
 
