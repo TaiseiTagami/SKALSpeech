@@ -8,7 +8,7 @@ from skalspeech.commands.convert import _write_sampled_csv
 
 
 runner = CliRunner()
-FIXTURE = Path(__file__).parent / "data" / "rainbow" / "output" / "rainbow.TextGrid"
+FIXTURE = Path(__file__).parent / "local" / "rainbow" / "output" / "rainbow.TextGrid"
 
 
 INTERVALS = {
@@ -93,4 +93,4 @@ def test_convert_writes_legacy_interval_csv(tmp_path: Path):
     with output.open(newline="", encoding="utf-8") as file:
         rows = list(csv.reader(file))
     assert rows[0] == ["tier", "start", "end", "label"]
-    assert len(rows) == 237
+    assert len(rows) == 362
