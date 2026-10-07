@@ -43,6 +43,12 @@ mfa version
 .\.venv\Scripts\python.exe main.py --help
 ```
 
+Local acoustic models and pronunciation dictionaries used by the GUI can be
+stored under `models\acoustic\` and `models\dictionary\`. These directories are
+ignored by Git because model files are large. The GUI uses the English US ARPA
+files there as its initial defaults and lets you change those paths from its
+Defaults tab.
+
 From the project directory, the final command is:
 
 ```powershell

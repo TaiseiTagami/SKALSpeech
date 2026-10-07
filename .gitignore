@@ -11,6 +11,9 @@ build/
 
 tests/local/
 
+# Locally installed acoustic models and dictionaries
+models/
+
 # Generated audio and conversion output
 *.wav
 *.csv
