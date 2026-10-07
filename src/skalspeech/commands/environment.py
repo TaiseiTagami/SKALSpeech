@@ -70,6 +70,6 @@ def open_environment() -> None:
             "-Command",
             command,
         ],
-        creationflags=subprocess.CREATE_NEW_CONSOLE,
+        creationflags=getattr(subprocess, "CREATE_NEW_CONSOLE", 0),
     )
     print(f"Opened PowerShell with Conda environment: {environment}")
