@@ -10,6 +10,13 @@ build/
 .vscode/
 
 tests/local/
+!tests/local/
+tests/local/*
+!tests/local/rainbow/
+tests/local/rainbow/*
+!tests/local/rainbow/output/
+tests/local/rainbow/output/*
+!tests/local/rainbow/output/rainbow.TextGrid
 
 # Locally installed acoustic models and dictionaries
 models/
