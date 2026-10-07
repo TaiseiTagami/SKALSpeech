@@ -17,5 +17,7 @@ skalspeech align corpus dictionary.dict english.zip output `
   --clean --single_speaker
 ```
 
-MFA must be installed and available on `PATH`. Use
+MFA must be installed separately. If a Conda environment was saved with
+`skalspeech environment set <name>`, SKALSpeech looks for MFA there
+automatically; otherwise MFA must be available on `PATH`. Use
 [`mfa`](mfa.md) for other MFA commands.
