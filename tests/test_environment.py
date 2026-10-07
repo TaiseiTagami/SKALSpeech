@@ -44,4 +44,4 @@ def test_open_environment_starts_powershell(monkeypatch, tmp_path):
     assert result.exit_code == 0, result.stdout
     assert calls[0][0][0:3] == ["powershell.exe", "-NoExit", "-Command"]
     assert "conda activate 'aligner'" in calls[0][0][-1]
-    assert calls[0][1] == subprocess.CREATE_NEW_CONSOLE
+    assert calls[0][1] == getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
