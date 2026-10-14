@@ -9,6 +9,7 @@ Command-specific documentation for SKALSpeech.
 - [convert](convert.md)
 - [textgrid-to-csv](textgrid-to-csv.md)
 - [csv](csv.md)
+- [pipeline](pipeline.md)
 - [environment](environment.md)
 
 Run `skalspeech --help` or any command's `--help` option for the live CLI reference.

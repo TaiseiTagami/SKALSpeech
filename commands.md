@@ -19,6 +19,10 @@ skalspeech textgrid-to-csv --help
 skalspeech csv --help
 skalspeech csv from-txt --help
 skalspeech csv insert --help
+skalspeech csv select --help
+skalspeech pipeline --help
+skalspeech pipeline run --help
+skalspeech pipeline from-config --help
 ```
 
 Configure the Conda environment used for alignment and open it in a new

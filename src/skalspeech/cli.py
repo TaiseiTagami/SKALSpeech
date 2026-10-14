@@ -5,6 +5,7 @@ from .commands.convert import convert_command
 from .commands.csv_commands import csv_app
 from .commands.environment import environment_app
 from .commands.mfa import mfa_command
+from .commands.pipeline import pipeline_app
 from .commands.slice import slice_command
 from .version import version_command
 
@@ -23,4 +24,5 @@ app.command(
 app.command("convert")(convert_command)
 app.command("textgrid-to-csv")(convert_command)
 app.add_typer(csv_app, name="csv")
+app.add_typer(pipeline_app, name="pipeline")
 app.add_typer(environment_app, name="environment")

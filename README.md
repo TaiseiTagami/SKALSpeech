@@ -101,7 +101,9 @@ Available commands:
 | `textgrid-to-csv` | Sample a TextGrid into a time-based CSV or export interval rows. |
 | `csv from-txt` | Convert a delimited text table into a CSV file. |
 | `csv insert` | Insert columns from one CSV into another CSV. |
-
+| `csv select` | Keep and optionally rename selected CSV columns. |
+| `pipeline run` | Merge a sampled TextGrid with sensor data and select columns. |
+| `pipeline from-config` | Run the whole pipeline from one YAML file. |
 ## Convert Text Tables to CSV
 
 Use `csv from-txt` for tab-separated text tables such as exported sensor
@@ -141,6 +143,35 @@ python main.py csv insert source.csv destination.csv combined.csv `
 
 The source and destination must have the same number of data rows. The header
 row is preserved and expanded with the inserted source headers.
+
+## Select and Rename CSV Columns
+
+The `csv select` command writes a copy of a CSV containing only the columns
+listed in the `columns` section of a YAML config. Keys are original column
+names (exactly as in the CSV) and values are new names; leave a value empty to
+keep the original name:
+
+```yaml
+columns:
+  start: begin
+  label:
+```
+
+```powershell
+python main.py csv select input.csv output.csv config.yaml
+```
+
+## Process MFA Output and Sensor Data in One Step
+
+The `pipeline` command samples an MFA TextGrid at the config's frequency,
+merges it with the sensor data (`.txt` or `.csv`), and applies the `columns`
+select/rename list. See [docs/pipeline.md](docs/pipeline.md) for the config
+layout.
+
+```powershell
+python main.py pipeline run output\rainbow.TextGrid data.txt result.csv config.yaml
+python main.py pipeline from-config config.yaml
+```
 
 ## Slice Audio from a TextGrid
 

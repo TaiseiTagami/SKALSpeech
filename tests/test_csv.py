@@ -36,6 +36,32 @@ def test_insert_defaults_to_all_source_columns_at_beginning(tmp_path: Path):
     ]
 
 
+def test_select_keeps_and_renames_columns(tmp_path: Path):
+    source = tmp_path / "source.csv"
+    params = tmp_path / "params.yaml"
+    output = tmp_path / "output.csv"
+    write_csv(source, [["a", "b", "c"], ["1", "2", "3"], ["4", "5", "6"]])
+    params.write_text("columns:\n  c: renamed\n  a:\n", encoding="utf-8")
+
+    result = runner.invoke(app, ["csv", "select", str(source), str(output), str(params)])
+
+    assert result.exit_code == 0, result.stdout
+    assert read_csv(output) == [["renamed", "a"], ["3", "1"], ["6", "4"]]
+
+
+def test_select_rejects_unknown_column(tmp_path: Path):
+    source = tmp_path / "source.csv"
+    params = tmp_path / "params.yaml"
+    write_csv(source, [["a"], ["1"]])
+    params.write_text("columns:\n  missing:\n", encoding="utf-8")
+
+    result = runner.invoke(
+        app, ["csv", "select", str(source), str(tmp_path / "o.csv"), str(params)]
+    )
+
+    assert result.exit_code != 0
+
+
 def test_from_txt_converts_tab_separated_data(tmp_path: Path):
     input_txt = tmp_path / "input.txt"
     output = tmp_path / "output.csv"
