@@ -1,0 +1,47 @@
+
+# -----------------------------------------------------------------------------
+# whisperx: speech-to-text + forced alignment, written as a Praat TextGrid with
+# `words` and `sentences` tiers.
+#   skalspeech transcribe speech.wav outdir -c config.yaml
+#   skalspeech forced-align speech.wav transcript.txt out.TextGrid -c config.yaml
+#   skalspeech pipeline whisper CMF23 CMF24 -c config.yaml
+# Everything here is optional; the values shown are the defaults.
+# -----------------------------------------------------------------------------
+whisperx:
+  # Whisper model: a local faster-whisper folder (works offline) or a model
+  # name such as small.en (needs Hugging Face access).
+  model: models/whisper/small
+
+  # Forced-alignment (wav2vec2) model. The LARGE model gives tighter word
+  # boundaries than WAV2VEC2_ASR_BASE_960H, but is slower. This default is an
+  # English model: for another `language`, set a model for that language here.
+  align_model: WAV2VEC2_ASR_LARGE_LV60K_960H
+
+  language: en          # two-letter language code
+  device: cpu           # cpu or cuda (cuda needs a supported NVIDIA GPU)
+  compute_type: int8    # int8 (fast on CPU), float32 (slower), float16 (GPU only)
+
+  # Keep the raw WhisperX JSON next to the TextGrid instead of deleting it.
+  keep_json: false
+
+  # Path to the whisperx executable. Default: .venv-whisperx\Scripts\whisperx.exe
+  # in this project, then `whisperx` on PATH.
+  # executable: 'C:\tools\whisperx\Scripts\whisperx.exe'
+
+  # Any other whisperx flag, written without the leading dashes.
+  #   true  -> bare flag (e.g. print_progress: true -> --print_progress)
+  #   false/null -> skipped      list -> flag repeated for each item
+  options:
+    beam_size: 5
+    # batch_size: 4         # lower if you run out of memory
+    # initial_prompt: "The rainbow passage."   # nudges spelling/vocabulary
+    # vad_method: silero    # alternative voice-activity detector
+
+  # --- only used by `pipeline whisper` ---
+  # Folder holding the corpora (same as collect's `output`), and the corpus
+  # names under it. Command-line names replace this list; --root overrides root.
+  # Absolute paths in the list are used as given.
+  root: tests/local/control
+  corpora: [CMF18, CMF19, CMF22, CMF23, CMF24, CMF25, CMF26, CMF27, CMF28, CMF29]
+  input_dir: input
+  wav_name: speech.wav

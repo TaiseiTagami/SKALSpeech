@@ -1,4 +1,4 @@
-# `pipeline`
+﻿# `pipeline`
 
 Processes raw MFA output and sensor data into one CSV in a single step. This
 replaces running `textgrid-to-csv`, `csv from-txt`, `csv insert` and
@@ -66,3 +66,29 @@ mfa: {}            # reserved for MFA flags; currently unused
 keep them. Output columns follow the order in `columns`.
 
 `csv select` reads the same `columns` section, so one config can drive both.
+## `pipeline whisper` and `pipeline mfa`
+
+Run WhisperX or MFA over a list of corpus folders (the `collect` layout, e.g.
+`tests\local\control\CMF23`). Corpora are given on the command line or as
+`corpora:` in the config; a corpus that fails is reported and skipped, and the
+exit code is 1 if any did. Names are resolved under `root:` in the config (or
+`--root`), so only the subject IDs are needed; absolute paths are used as given.
+
+```powershell
+skalspeech pipeline whisper CMF23 CMF24 -c config.yaml
+skalspeech pipeline mfa CMF23 -c config.yaml --root tests\local\control
+```
+
+- `whisper` reads `<corpus>\input\speech.wav` and writes
+  `<corpus>\input\speech.TextGrid` (`words` and `sentences` tiers), using the
+  [`transcribe`](docs/transcribe.md) settings from the `whisperx` section, plus
+  optional `corpora`, `input_dir` (default `input`) and `wav_name` (default
+  `speech.wav`).
+- `mfa` runs `mfa align <corpus>\input <dictionary> <acoustic_model>
+  <corpus>\output` using the `mfa` section (`dictionary`, `acoustic_model`,
+  `options`, plus optional `corpora`, `input_dir`, `output_dir`, and
+  `transcript_tiers`). Only the TextGrid tiers in `transcript_tiers` (default
+  `[words]`) are given to MFA, because MFA treats every tier as a separate
+  speaker. The input is staged in a temporary folder (`pos.txt` is left out), so
+  your input folder is not changed.
+

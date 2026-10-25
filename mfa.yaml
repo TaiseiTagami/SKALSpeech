@@ -1,0 +1,36 @@
+
+# -----------------------------------------------------------------------------
+# mfa: Montreal Forced Aligner.
+#   skalspeech align-config <corpus_dir> <output_dir> -c config.yaml
+#   skalspeech pipeline mfa CMF23 CMF24 -c config.yaml
+# (`skalspeech mfa ...` and `skalspeech align ...` take no config.)
+# MFA runs in the Conda environment set with `skalspeech environment set <name>`,
+# or from PATH.
+# -----------------------------------------------------------------------------
+mfa:
+  # Required. Pronunciation dictionary and acoustic model.
+  dictionary: models/dictionary/english_us_arpa.dict
+  acoustic_model: models/acoustic/english_us_arpa.zip
+
+  # Extra `mfa align` flags, written without the leading dashes. Same rules as
+  # whisperx.options: true -> bare flag, false/null -> skipped.
+  options:
+    clean: true             # --clean: ignore cached results from earlier runs
+    single_speaker: true    # --single_speaker: faster for one-speaker corpora
+    num_jobs: 4             # --num_jobs 4
+    # beam: 100             # --beam 100 (raise if alignment fails)
+    # retry_beam: 400
+
+  # --- only used by `pipeline mfa` ---
+  # Folder holding the corpora (same as collect's `output`), and the corpus
+  # names under it. Command-line names replace this list; --root overrides root.
+  # Absolute paths in the list are used as given.
+  root: tests/local/control
+  corpora: [CMF18, CMF19, CMF22, CMF23, CMF24, CMF25, CMF26, CMF27, CMF28, CMF29]
+  input_dir: input
+  output_dir: output
+
+  # Which TextGrid tiers are given to MFA as the transcript. MFA treats every
+  # tier as a separate speaker, so keep this to the tier(s) you want aligned:
+  # [words], [sentences], or both.
+  transcript_tiers: [words]

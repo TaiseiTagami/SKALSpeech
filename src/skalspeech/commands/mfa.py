@@ -1,4 +1,4 @@
-import shutil
+﻿import shutil
 import subprocess
 
 import typer
@@ -6,8 +6,8 @@ import typer
 from .environment import _configured_environment
 
 
-def run_mfa(command_name: str, arguments: list[str]) -> None:
-    """Run an MFA command and return its exit code to the caller."""
+def run_mfa_process(command_name: str, arguments: list[str]) -> int:
+    """Run an MFA command and return its exit code."""
     mfa_command = ["mfa", command_name, *arguments]
     environment = _configured_environment()
     conda = shutil.which("conda")
@@ -29,7 +29,12 @@ def run_mfa(command_name: str, arguments: list[str]) -> None:
             "or ensure the 'mfa' command is on PATH."
         )
 
-    raise typer.Exit(result.returncode)
+    return result.returncode
+
+
+def run_mfa(command_name: str, arguments: list[str]) -> None:
+    """Run an MFA command and exit with its exit code."""
+    raise typer.Exit(run_mfa_process(command_name, arguments))
 
 
 def mfa_command(ctx: typer.Context, command_name: str) -> None:

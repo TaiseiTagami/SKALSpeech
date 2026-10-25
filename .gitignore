@@ -1,4 +1,5 @@
 .venv/
+.venv-whisperx/
 __pycache__/
 *.py[cod]
 .pytest_cache/

@@ -8,7 +8,8 @@ confusing each other's settings. Sections currently used:
     data:      how to read the sensor data (e.g. delimiter)
     textgrid:  how to sample the TextGrid (tiers, instances)
     columns:   original column name -> new name (null keeps the name)
-    mfa:       reserved for MFA flags
+    mfa:       `dictionary`, `acoustic_model`, and `options` (flag -> value;
+               true = bare flag) used by `align-config`
 
 Unknown sections are ignored.
 """

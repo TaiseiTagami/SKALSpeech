@@ -1,0 +1,197 @@
+# =============================================================================
+# SKALSpeech example config  (copy to config.yaml and edit)
+# =============================================================================
+# One file can drive every command. Each command reads only its own section(s)
+# and ignores the rest, so you can delete sections you do not use.
+#
+# Paths:
+#   * Windows paths with backslashes are safest in single quotes: 'C:\data\x'
+#   * Relative paths are resolved from the folder you run the command in,
+#     EXCEPT `files:` below, which is relative to this YAML file.
+#   * "null" or an empty value means "not set / use the default".
+#
+# Which section is used by which command:
+#   collect             -> skalspeech collect
+#   whisperx            -> skalspeech transcribe, forced-align, pipeline whisper
+#   mfa                 -> skalspeech align-config, pipeline mfa
+#   corpus/textgrid/data/columns/files
+#                       -> skalspeech pipeline run / from-config, csv select
+# =============================================================================
+
+
+# -----------------------------------------------------------------------------
+# collect: copy each subject's keyword wav + position file into the project
+# layout.   skalspeech collect CMF17 CMF18 -c config.yaml
+# Result:   <output>\<ID>\info.txt, <output>\<ID>\input\<wav_name>, ...\<pos_name>
+# -----------------------------------------------------------------------------
+collect:
+  # Folder that contains the subject folders (CMF17_07242024, ...).
+  root: '\\bigdatavuhcifs.mc.vanderbilt.edu\HSS2\Data\Depts\Labs\Mefferdlab\EMA Vandy Controls'
+
+  # Path inside a subject folder that holds the wavs and pos files. A part that
+  # does not exist exactly is matched by its ending, so "EMA" finds
+  # CMF17_07242024_EMA. Keep this to the part that is the same for everyone.
+  audio_subdir: 'EMA\pos'
+
+  # Keyword the wav name must contain (case-insensitive). Exactly one wav may
+  # match; otherwise that subject is skipped with an error. The position file
+  # is the same name with a .txt extension.
+  identifier: rainbow
+
+  # Where the per-subject folders are written.
+  output: 'tests\local\control'
+
+  # Names the copied files are given.
+  wav_name: speech.wav
+  pos_name: pos.txt
+
+  # Written to info.txt as 'Frequency: <n>' (sensor sample rate in Hz).
+  frequency: 250
+
+  # First word of the info.txt line ("Control, CMF21: <original wav path>").
+  group: Control
+
+  # Subject folder prefixes. "CMF17" matches CMF17_07242024. A prefix that
+  # matches zero or several folders is skipped with an error.
+  # Command-line folders, if given, replace this list.
+  folders: [CMF17, CMF18, CMF19]
+
+
+# -----------------------------------------------------------------------------
+# whisperx: speech-to-text + forced alignment, written as a Praat TextGrid with
+# `words` and `sentences` tiers.
+#   skalspeech transcribe speech.wav outdir -c config.yaml
+#   skalspeech forced-align speech.wav transcript.txt out.TextGrid -c config.yaml
+#   skalspeech pipeline whisper CMF23 CMF24 -c config.yaml
+# Everything here is optional; the values shown are the defaults.
+# -----------------------------------------------------------------------------
+whisperx:
+  # Whisper model: a local faster-whisper folder (works offline) or a model
+  # name such as small.en (needs Hugging Face access).
+  model: models/whisper/small
+
+  # Forced-alignment (wav2vec2) model. The LARGE model gives tighter word
+  # boundaries than WAV2VEC2_ASR_BASE_960H, but is slower. This default is an
+  # English model: for another `language`, set a model for that language here.
+  align_model: WAV2VEC2_ASR_LARGE_LV60K_960H
+
+  language: en          # two-letter language code
+  device: cpu           # cpu or cuda (cuda needs a supported NVIDIA GPU)
+  compute_type: int8    # int8 (fast on CPU), float32 (slower), float16 (GPU only)
+
+  # Keep the raw WhisperX JSON next to the TextGrid instead of deleting it.
+  keep_json: false
+
+  # Path to the whisperx executable. Default: .venv-whisperx\Scripts\whisperx.exe
+  # in this project, then `whisperx` on PATH.
+  # executable: 'C:\tools\whisperx\Scripts\whisperx.exe'
+
+  # Any other whisperx flag, written without the leading dashes.
+  #   true  -> bare flag (e.g. print_progress: true -> --print_progress)
+  #   false/null -> skipped      list -> flag repeated for each item
+  options:
+    beam_size: 5
+    # batch_size: 4         # lower if you run out of memory
+    # initial_prompt: "The rainbow passage."   # nudges spelling/vocabulary
+    # vad_method: silero    # alternative voice-activity detector
+
+  # --- only used by `pipeline whisper` ---
+  # Folder holding the corpora (same as collect's `output`), and the corpus
+  # names under it. Command-line names replace this list; --root overrides root.
+  # Absolute paths in the list are used as given.
+  root: tests/local/control
+  corpora: []
+  input_dir: input
+  wav_name: speech.wav
+
+
+# -----------------------------------------------------------------------------
+# mfa: Montreal Forced Aligner.
+#   skalspeech align-config <corpus_dir> <output_dir> -c config.yaml
+#   skalspeech pipeline mfa CMF23 CMF24 -c config.yaml
+# (`skalspeech mfa ...` and `skalspeech align ...` take no config.)
+# MFA runs in the Conda environment set with `skalspeech environment set <name>`,
+# or from PATH.
+# -----------------------------------------------------------------------------
+mfa:
+  # Required. Pronunciation dictionary and acoustic model.
+  dictionary: models/dictionary/english_us_arpa.dict
+  acoustic_model: models/acoustic/english_us_arpa.zip
+
+  # Extra `mfa align` flags, written without the leading dashes. Same rules as
+  # whisperx.options: true -> bare flag, false/null -> skipped.
+  options:
+    clean: true             # --clean: ignore cached results from earlier runs
+    single_speaker: true    # --single_speaker: faster for one-speaker corpora
+    num_jobs: 4             # --num_jobs 4
+    # beam: 100             # --beam 100 (raise if alignment fails)
+    # retry_beam: 400
+
+  # --- only used by `pipeline mfa` ---
+  # Folder holding the corpora (same as collect's `output`), and the corpus
+  # names under it. Command-line names replace this list; --root overrides root.
+  # Absolute paths in the list are used as given.
+  root: tests/local/control
+  corpora: []
+  input_dir: input
+  output_dir: output
+
+  # Which TextGrid tiers are given to MFA as the transcript. MFA treats every
+  # tier as a separate speaker, so keep this to the tier(s) you want aligned:
+  # [words], [sentences], or both.
+  transcript_tiers: [words]
+
+
+# -----------------------------------------------------------------------------
+# corpus: facts about the recording.
+# -----------------------------------------------------------------------------
+corpus:
+  # Required by pipeline run/from-config: sensor samples per second (Hz). The
+  # TextGrid is sampled at this rate so it lines up with the sensor rows.
+  frequency: 250
+
+
+# -----------------------------------------------------------------------------
+# files: input/output paths for `skalspeech pipeline from-config <this file>`.
+# Relative paths here are relative to this YAML file.
+# -----------------------------------------------------------------------------
+files:
+  textgrid: output/speech.TextGrid     # MFA output
+  data: input/pos.txt                  # raw sensor data
+  output: processed/merged.csv         # merged result (folders are created)
+
+
+# -----------------------------------------------------------------------------
+# data: how to read the sensor data file.
+# -----------------------------------------------------------------------------
+data:
+  # Column separator for non-.csv data files (.csv files always use commas).
+  delimiter: "\t"                      # tab; use "," or " " if yours differs
+
+
+# -----------------------------------------------------------------------------
+# textgrid: how the TextGrid is sampled into rows.
+# -----------------------------------------------------------------------------
+textgrid:
+  # Tiers to include, by name. Default (leave out): every tier.
+  tiers: [words, phones]
+
+  # Add a "<tier>_instance" column numbering repeats of the same label
+  # (the 1st "the", the 2nd "the", ...).
+  instances: true
+
+
+# -----------------------------------------------------------------------------
+# columns: which columns of the merged table to keep, in this order, and what
+# to call them.  "original name: new name". An empty value keeps the name.
+# Names are case-sensitive. TextGrid columns are `time`, `<tier>`, `<tier>_int`
+# and `<tier>_instance`. Leave this section out to keep every column.
+# Also used by `skalspeech csv select`.
+# -----------------------------------------------------------------------------
+columns:
+  time: time_s
+  words: word
+  words_instance: word_instance
+  phones:                # keep the original name
+  Ch1_X: tongue_x        # example sensor columns; use your own header names
+  Ch1_Y: tongue_y
