@@ -75,3 +75,10 @@ It never recopies audio/sensor files or rewrites `info.txt`. Existing sensor
 column assignments and other metadata are preserved. It uses the original
 source when available and falls back to the original WAV path in `info.txt`
 when that source is inaccessible. The already collected input files must exist.
+
+## Shared column template
+
+Pass `--column-template path/to/template.yaml` with normal collection or
+`--yaml-only` to save a reusable template reference in each corpus YAML.
+The template contains a `columns:` mapping. Individual `corpus.yaml`
+`columns` values override it during `pipeline process-csv`.

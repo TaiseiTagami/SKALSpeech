@@ -74,6 +74,7 @@ def collect_subject(
     output: Path,
     settings: dict,
     yaml_only: bool = False,
+    column_template: Optional[str] = None,
 ) -> Path:
     subject_output = output / subject
     if yaml_only and not subject_output.is_dir():
@@ -116,6 +117,8 @@ def collect_subject(
         "files": {"wav": f"input/{settings['wav_name']}", "data": f"input/{settings['pos_name']}"},
         "columns": {},  # Fill in the subject-specific sensor/channel names.
     }
+    if column_template is not None:
+        metadata["column_template"] = column_template
     metadata_path = subject_output / "corpus.yaml"
     if metadata_path.is_file():
         existing = load_config(metadata_path)
@@ -147,6 +150,7 @@ def collect_command(
     ),
     output: Optional[Path] = typer.Option(None, "--output", "-o"),
     yaml_only: bool = typer.Option(False, "--yaml-only", help="Only write corpus.yaml for existing collected subjects."),
+    column_template: Optional[Path] = typer.Option(None, "--column-template", help="Shared YAML column template to reference from each corpus.yaml."),
 ) -> None:
     """Copy each subject's keyword wav and pos file into the project layout.
 
@@ -179,11 +183,19 @@ def collect_command(
     if missing:
         raise typer.BadParameter(f"Missing: {', '.join(missing)} (CLI or config).")
 
+    template_ref = None
+    if column_template is not None:
+        template_path = column_template.resolve()
+        if not template_path.is_file():
+            raise typer.BadParameter(f"Column template not found: {template_path}")
+        from ..config import get_columns
+        get_columns(load_config(template_path))
+        template_ref = str(template_path)
     failures = 0
     for subject in subjects:
         try:
             done = collect_subject(
-                subject, Path(root), settings["audio_subdir"], identifier, output, settings, yaml_only=yaml_only
+                subject, Path(root), settings["audio_subdir"], identifier, output, settings, yaml_only=yaml_only, column_template=template_ref
             )
             typer.echo(f"{subject}: wrote {done}")
         except (ValueError, OSError) as error:

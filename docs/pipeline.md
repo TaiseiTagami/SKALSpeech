@@ -177,3 +177,41 @@ Sensor mappings are **per corpus**, so the same channel can have a different
 anatomical meaning for another subject. Keep all shared column keys valid
 for every subject, or omit the shared `columns` section and specify all
 required columns in each subject's metadata.
+
+## Shared sensor column templates
+
+A reusable YAML template can supply a common sensor mapping to several corpora:
+
+```yaml
+# templates/standard-sensors.yaml
+columns:
+  time: time_s
+  words: word
+  Ch1_X: tongue_tip_x
+  Ch1_Y: tongue_tip_y
+```
+
+Each corpus can reference it, with local overrides:
+
+```yaml
+# CMF23/corpus.yaml
+column_template: ../templates/standard-sensors.yaml
+columns:
+  Ch1_X: jaw_x
+```
+
+`process-csv` combines the shared config's `columns`, then the template's
+`columns`, then the corpus's `columns` (highest priority). The final
+mapping controls both selection and renaming; omitted keys retain inherited
+mappings. Template paths in `corpus.yaml` are relative to the corpus folder.
+Alternatively set `process_csv.column_template` in the shared config (relative
+to that config's folder) for all subjects, and override it per subject.
+
+To assign a template during metadata generation:
+
+```powershell
+skalspeech collect CMF23 CMF24 -c collect_control.yaml --yaml-only --column-template templates/standard-sensors.yaml
+```
+
+The template is referenced, not copied, so later edits to the template apply
+to all corpora referencing it. Existing explicit corpus mappings retain priority.

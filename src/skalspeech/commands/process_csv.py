@@ -5,7 +5,7 @@ from typing import List, Optional
 
 import typer
 
-from ..config import get_section, load_config
+from ..config import get_section, load_config, get_columns
 from .corpus_pipelines import _corpora
 
 
@@ -55,11 +55,25 @@ def process_csv_command(
                 for key in ("corpus", "textgrid", "data"):
                     if key in metadata:
                         local_settings[key] = {**get_section(local_settings, key), **get_section(metadata, key)}
-                if "columns" in metadata:
-                    local_columns = get_section(metadata, "columns")
-                    if local_columns:
-                        # Override individual mappings without dropping the global selection.
-                        local_settings["columns"] = {**get_section(settings, "columns"), **local_columns}
+                template = metadata.get("column_template", section.get("column_template"))
+                template_columns = {}
+                if template is not None:
+                    if not isinstance(template, str) or not template.strip():
+                        raise typer.BadParameter("column_template must be a YAML file path.")
+                    # Per-corpus paths are relative to corpus.yaml; global paths
+                    # are relative to the shared configuration file.
+                    template_base = corpus if "column_template" in metadata else config.resolve().parent
+                    template_path = Path(template)
+                    if not template_path.is_absolute():
+                        template_path = template_base / template_path
+                    template_columns = get_columns(load_config(template_path))
+                # Precedence: shared config < template < per-subject overrides.
+                # Template-only configurations can supply all selected columns.
+                local_columns = get_columns(metadata)
+                if template_columns or local_columns:
+                    local_settings["columns"] = {
+                        **get_columns(settings), **template_columns, **local_columns
+                    }
                 # The collect-created files.data is the collected sensor filename.
                 local_files = get_section(metadata, "files")
                 local_data = local_files.get("data")
