@@ -63,3 +63,15 @@ columns:
 
 The `pipeline process-csv` command reads this file automatically, using its
 frequency and subject-specific column names. See [pipeline](pipeline.md).
+
+## Metadata-only collection for existing subjects
+
+```powershell
+skalspeech collect CMF23 CMF24 -c collect_control.yaml --yaml-only
+```
+
+This mode only creates or updates each existing subject's `corpus.yaml`.
+It never recopies audio/sensor files or rewrites `info.txt`. Existing sensor
+column assignments and other metadata are preserved. It uses the original
+source when available and falls back to the original WAV path in `info.txt`
+when that source is inaccessible. The already collected input files must exist.
