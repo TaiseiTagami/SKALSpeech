@@ -55,10 +55,11 @@ def process_csv_command(
                 input_directory, annotation_dir, processed_dir = recording_paths(folder, meta, source)
                 if meta.get("legacy"):
                     grid = corpus / grid_dir / grid_name
-                    data = corpus / input_dir / data_name
+                    local_files = get_section(load_config(corpus / "corpus.yaml"), "files") if (corpus / "corpus.yaml").is_file() else {}
+                    data = corpus / local_files.get("data", str(Path(input_dir) / data_name))
                     output = corpus / destination
                 else:
-                    grid = annotation_dir / ("mfa/" if source == "mfa" else "") / grid_name
+                    grid = annotation_dir / ("mfa" if source == "mfa" else "") / grid_name
                     data = input_directory / "sensors.txt"
                     output = processed_dir / "merged.csv"
                 if not grid.is_file():
