@@ -15,6 +15,6 @@ def test_yaml_only_preserves_existing_files(tmp_path):
     (target / "recordings" / "rainbow" / "speech.wav").write_bytes(b"preserve")
     (target / "info.txt").write_text("preserve")
     collect_subject("CMF23", tmp_path / "source", "EMA/pos", "rainbow", tmp_path / "out", settings, yaml_only=True)
-    assert (target / "input" / "speech.wav").read_bytes() == b"preserve"
+    assert (target / "recordings" / "rainbow" / "speech.wav").read_bytes() == b"preserve"
     assert (target / "info.txt").read_text() == "preserve"
     assert yaml.safe_load((target / "corpus.yaml").read_text())["columns"] == {"Ch1_X": "jaw_x"}

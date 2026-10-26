@@ -1,4 +1,4 @@
 # Current plan
 
-- Verify GitHub Actions test results after the main-branch compatibility repairs.
-- Repair any remaining test failures and run regression checks.
+- Check GitHub Actions for main-branch compatibility repair results.
+- Address remaining failures from CI and confirm full suite passes.

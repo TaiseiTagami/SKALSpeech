@@ -133,6 +133,8 @@ def collect_subject(
         for key, value in existing.items():
             if key not in metadata:
                 metadata[key] = value
+        if isinstance(existing.get("recordings"), list):
+            metadata["recordings"] = existing["recordings"]
     if metadata_path.is_file():
         current = {item["id"]: item for item in metadata.get("recordings", [])}
         current[recording_id] = {"id": recording_id, "type": recording_type}
