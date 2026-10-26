@@ -143,3 +143,37 @@ defaults to the configured `whisperx.wav_name` stem plus `.TextGrid`.
 
 A CSV is only written when input data and sampled
 TextGrid rows match exactly; no interpolation or sensor resampling is done.
+
+## Subject-specific corpus metadata
+
+`collect` creates `<corpus>/corpus.yaml` with subject, group, source paths,
+`corpus.frequency`, copied file names and an empty `columns` mapping. Edit
+`columns` to label the actual sensor placements for each subject. When
+`pipeline process-csv` runs, it automatically loads this file, overriding
+shared `corpus`, `textgrid`, and `data` settings for that subject. Nonempty
+per-subject `columns` entries override or extend shared column mappings;
+shared column selection remains active. An empty mapping keeps the global
+mapping. `files.data` points to the collected sensor file relative to the
+subject directory. A missing `corpus.yaml` retains the old shared-config
+behavior.
+
+```yaml
+subject: CMF23
+group: Control
+corpus:
+  frequency: 250
+source:
+  wav: 'C:\data\CMF23\rainbow.wav'
+  position: 'C:\data\CMF23\rainbow.txt'
+files:
+  wav: input/speech.wav
+  data: input/pos.txt
+columns:
+  Ch1_X: tongue_tip_x
+  Ch1_Y: tongue_tip_y
+```
+
+Sensor mappings are **per corpus**, so the same channel can have a different
+anatomical meaning for another subject. Keep all shared column keys valid
+for every subject, or omit the shared `columns` section and specify all
+required columns in each subject's metadata.

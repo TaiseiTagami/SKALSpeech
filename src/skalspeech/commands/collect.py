@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
+import yaml
 
 from ..config import get_section, load_config
 
@@ -83,6 +84,22 @@ def collect_subject(
     input_directory.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(wav, input_directory / settings["wav_name"])
     shutil.copyfile(pos, input_directory / settings["pos_name"])
+    metadata = {
+        "subject": subject,
+        "group": settings["group"],
+        "corpus": {"frequency": settings["frequency"]},
+        "source": {
+            "wav": str(wav.resolve()),
+            "position": str(pos.resolve()),
+            "subject_directory": str(wav.parent.resolve()),
+            "identifier": identifier,
+        },
+        "files": {"wav": f"input/{settings['wav_name']}", "data": f"input/{settings['pos_name']}"},
+        "columns": {},  # Fill in the subject-specific sensor/channel names.
+    }
+    (subject_output / "corpus.yaml").write_text(
+        yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
     (subject_output / "info.txt").write_text(
         f'{settings["group"]}, {subject}: "{wav}"\nFrequency: {settings["frequency"]}\n',
         encoding="utf-8",

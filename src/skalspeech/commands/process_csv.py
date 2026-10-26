@@ -1,4 +1,5 @@
 """Batch TextGrid + sensor conversion using the same processing as pipeline run."""
+from copy import deepcopy
 from pathlib import Path
 from typing import List, Optional
 
@@ -46,17 +47,36 @@ def process_csv_command(
             raise typer.BadParameter(f"process_csv {name} must be a nonempty string.")
     failures = 0
     for corpus in _corpora(corpora, root, corpus_settings):
-        grid = corpus / grid_dir / grid_name
-        data = corpus / input_dir / data_name
-        output = corpus / destination
         try:
+            local_settings = deepcopy(settings)
+            metadata_file = corpus / "corpus.yaml"
+            if metadata_file.is_file():
+                metadata = load_config(metadata_file)
+                for key in ("corpus", "textgrid", "data"):
+                    if key in metadata:
+                        local_settings[key] = {**get_section(local_settings, key), **get_section(metadata, key)}
+                if "columns" in metadata:
+                    local_columns = get_section(metadata, "columns")
+                    if local_columns:
+                        # Override individual mappings without dropping the global selection.
+                        local_settings["columns"] = {**get_section(settings, "columns"), **local_columns}
+                # The collect-created files.data is the collected sensor filename.
+                local_files = get_section(metadata, "files")
+                local_data = local_files.get("data")
+                if local_data is not None and (not isinstance(local_data, str) or not local_data):
+                    raise typer.BadParameter("corpus.yaml files.data must be a nonempty path.")
+            else:
+                local_data = None
+            grid = corpus / grid_dir / grid_name
+            data = corpus / local_data if local_data else corpus / input_dir / data_name
+            output = corpus / destination
             if not grid.is_file():
                 raise FileNotFoundError(f"TextGrid not found: {grid}")
             if not data.is_file():
                 raise FileNotFoundError(f"Sensor data not found: {data}")
             if output.resolve() in (grid.resolve(), data.resolve()):
                 raise ValueError("Output cannot overwrite an input file.")
-            run_pipeline(grid, data, output, settings)
+            run_pipeline(grid, data, output, local_settings)
             typer.echo(f"{corpus}: wrote {output}")
         except (OSError, ValueError, typer.BadParameter) as error:
             failures += 1
