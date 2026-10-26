@@ -19,6 +19,13 @@ replaces running `textgrid-to-csv`, `csv from-txt`, `csv insert` and
 	skalspeech pipeline from-config <config_file>
 	```
 
+- `pipeline process-csv` batch-processes aligned corpora into one CSV per subject:
+
+  ```powershell
+  skalspeech pipeline process-csv CMF23 CMF24 -c config.yaml
+  skalspeech pipeline process-csv CMF23 -c config.yaml --source whisper
+  ```
+
 ## What it does
 
 1. Samples the TextGrid at `corpus.frequency` (same output as
@@ -58,7 +65,7 @@ columns:           # optional; original column name -> new name
   phones:          # empty keeps the original name
   Ch1_X: tongue_x
 
-mfa: {}            # reserved for MFA flags; currently unused
+mfa: {}            # alignment settings (used by pipeline mfa)
 ```
 
 `columns` is applied to the merged table, so TextGrid columns (`time`,
@@ -66,6 +73,7 @@ mfa: {}            # reserved for MFA flags; currently unused
 keep them. Output columns follow the order in `columns`.
 
 `csv select` reads the same `columns` section, so one config can drive both.
+
 ## `pipeline whisper` and `pipeline mfa`
 
 Run WhisperX or MFA over a list of corpus folders (the `collect` layout, e.g.
@@ -81,7 +89,7 @@ skalspeech pipeline mfa CMF23 -c config.yaml --root tests\local\control
 
 - `whisper` reads `<corpus>\input\speech.wav` and writes
   `<corpus>\input\speech.TextGrid` (`words` and `sentences` tiers), using the
-  [`transcribe`](docs/transcribe.md) settings from the `whisperx` section, plus
+  [`transcribe`](transcribe.md) settings from the `whisperx` section, plus
   optional `corpora`, `input_dir` (default `input`) and `wav_name` (default
   `speech.wav`).
 - `mfa` runs `mfa align <corpus>\input <dictionary> <acoustic_model>
@@ -126,5 +134,12 @@ process_csv:
 
 CLI corpus names and `--root` override configured corpora and root. When
 `process_csv` does not set them, source-specific `mfa` or `whisperx`
-settings are reused. A CSV is only written when input data and sampled
+settings are reused. The `files` section is used by `from-config`, not by `process-csv`.
+For `process-csv`, `corpus.frequency` is required and `columns` must match
+actual sensor headers and selected TextGrid tiers. The source-specific
+`mfa` or `whisperx` config supplies the default corpus list/root; `process_csv`
+overrides those settings. When `--source whisper` is used, the TextGrid name
+defaults to the configured `whisperx.wav_name` stem plus `.TextGrid`.
+
+A CSV is only written when input data and sampled
 TextGrid rows match exactly; no interpolation or sensor resampling is done.

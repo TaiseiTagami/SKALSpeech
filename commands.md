@@ -23,6 +23,9 @@ skalspeech csv select --help
 skalspeech pipeline --help
 skalspeech pipeline run --help
 skalspeech pipeline from-config --help
+skalspeech pipeline whisper --help
+skalspeech pipeline mfa --help
+skalspeech pipeline process-csv --help
 ```
 
 Configure the Conda environment used for alignment and open it in a new

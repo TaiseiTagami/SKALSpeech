@@ -14,6 +14,7 @@
 #   collect             -> skalspeech collect
 #   whisperx            -> skalspeech transcribe, forced-align, pipeline whisper
 #   mfa                 -> skalspeech align-config, pipeline mfa
+  process_csv         -> skalspeech pipeline process-csv
 #   corpus/textgrid/data/columns/files
 #                       -> skalspeech pipeline run / from-config, csv select
 # =============================================================================
@@ -146,9 +147,26 @@ mfa:
 # corpus: facts about the recording.
 # -----------------------------------------------------------------------------
 corpus:
-  # Required by pipeline run/from-config: sensor samples per second (Hz). The
+  # Required by pipeline run/from-config/process-csv: sensor samples per second (Hz). The
   # TextGrid is sampled at this rate so it lines up with the sensor rows.
   frequency: 250
+
+
+# -----------------------------------------------------------------------------
+# process_csv: batch conversion of aligned TextGrids and sensor position data.
+#   skalspeech pipeline process-csv CMF23 CMF24 -c config.yaml
+#   skalspeech pipeline process-csv CMF23 -c config.yaml --source whisper
+# CLI corpus names and --root override these values. If omitted, root/corpora
+# come from the selected mfa/whisperx section.
+# -----------------------------------------------------------------------------
+process_csv:
+  root: tests/local/control
+  corpora: []
+  input_dir: input
+  mfa_output_dir: output
+  textgrid_name: speech.TextGrid
+  data_name: pos.txt
+  output: processed/merged.csv
 
 
 # -----------------------------------------------------------------------------

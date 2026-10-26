@@ -104,6 +104,9 @@ Available commands:
 | `csv select` | Keep and optionally rename selected CSV columns. |
 | `pipeline run` | Merge a sampled TextGrid with sensor data and select columns. |
 | `pipeline from-config` | Run the whole pipeline from one YAML file. |
+| `pipeline whisper` | Transcribe and align speech across corpus folders using WhisperX. |
+| `pipeline mfa` | Run MFA alignment across corpus folders. |
+| `pipeline process-csv` | Merge aligned TextGrids and sensor measurements into analysis-ready CSVs for multiple corpora. |
 ## Convert Text Tables to CSV
 
 Use `csv from-txt` for tab-separated text tables such as exported sensor
@@ -171,6 +174,8 @@ layout.
 ```powershell
 python main.py pipeline run output\rainbow.TextGrid data.txt result.csv config.yaml
 python main.py pipeline from-config config.yaml
+skalspeech pipeline process-csv CMF23 CMF24 -c config.yaml --root tests/local/control
+skalspeech pipeline process-csv CMF23 -c config.yaml --source whisper
 ```
 
 ## Slice Audio from a TextGrid
