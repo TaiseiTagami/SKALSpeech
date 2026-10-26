@@ -1,10 +1,11 @@
 """Batch TextGrid + sensor conversion using the same processing as pipeline run."""
+from copy import deepcopy
 from pathlib import Path
 from typing import List, Optional
 
 import typer
 
-from ..config import get_section, load_config
+from ..config import get_section, load_config, get_columns
 from .corpus_pipelines import _corpora
 
 
@@ -46,17 +47,50 @@ def process_csv_command(
             raise typer.BadParameter(f"process_csv {name} must be a nonempty string.")
     failures = 0
     for corpus in _corpora(corpora, root, corpus_settings):
-        grid = corpus / grid_dir / grid_name
-        data = corpus / input_dir / data_name
-        output = corpus / destination
         try:
+            local_settings = deepcopy(settings)
+            metadata_file = corpus / "corpus.yaml"
+            if metadata_file.is_file():
+                metadata = load_config(metadata_file)
+                for key in ("corpus", "textgrid", "data"):
+                    if key in metadata:
+                        local_settings[key] = {**get_section(local_settings, key), **get_section(metadata, key)}
+                template = metadata.get("column_template", section.get("column_template"))
+                template_columns = {}
+                if template is not None:
+                    if not isinstance(template, str) or not template.strip():
+                        raise typer.BadParameter("column_template must be a YAML file path.")
+                    # Per-corpus paths are relative to corpus.yaml; global paths
+                    # are relative to the shared configuration file.
+                    template_base = corpus if "column_template" in metadata else config.resolve().parent
+                    template_path = Path(template)
+                    if not template_path.is_absolute():
+                        template_path = template_base / template_path
+                    template_columns = get_columns(load_config(template_path))
+                # Precedence: shared config < template < per-subject overrides.
+                # Template-only configurations can supply all selected columns.
+                local_columns = get_columns(metadata)
+                if template_columns or local_columns:
+                    local_settings["columns"] = {
+                        **get_columns(settings), **template_columns, **local_columns
+                    }
+                # The collect-created files.data is the collected sensor filename.
+                local_files = get_section(metadata, "files")
+                local_data = local_files.get("data")
+                if local_data is not None and (not isinstance(local_data, str) or not local_data):
+                    raise typer.BadParameter("corpus.yaml files.data must be a nonempty path.")
+            else:
+                local_data = None
+            grid = corpus / grid_dir / grid_name
+            data = corpus / local_data if local_data else corpus / input_dir / data_name
+            output = corpus / destination
             if not grid.is_file():
                 raise FileNotFoundError(f"TextGrid not found: {grid}")
             if not data.is_file():
                 raise FileNotFoundError(f"Sensor data not found: {data}")
             if output.resolve() in (grid.resolve(), data.resolve()):
                 raise ValueError("Output cannot overwrite an input file.")
-            run_pipeline(grid, data, output, settings)
+            run_pipeline(grid, data, output, local_settings)
             typer.echo(f"{corpus}: wrote {output}")
         except (OSError, ValueError, typer.BadParameter) as error:
             failures += 1

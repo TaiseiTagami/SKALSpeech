@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import typer
+import yaml
 
 from ..config import get_section, load_config
 
@@ -72,18 +73,67 @@ def collect_subject(
     identifier: str,
     output: Path,
     settings: dict,
+    yaml_only: bool = False,
+    column_template: Optional[str] = None,
 ) -> Path:
-    wav = _wav_file(_audio_directory(_subject_folder(root, subject), audio_subdir), identifier)
+    subject_output = output / subject
+    if yaml_only and not subject_output.is_dir():
+        raise ValueError(f"Existing collected corpus not found: {subject_output}")
+    try:
+        wav = _wav_file(_audio_directory(_subject_folder(root, subject), audio_subdir), identifier)
+    except (ValueError, OSError):
+        if not yaml_only:
+            raise
+        info = subject_output / "info.txt"
+        if not info.is_file():
+            raise ValueError(f"Original source unavailable and {info} is missing")
+        match = re.search(r'"([^"]+\\.wav)"', info.read_text(encoding="utf-8"), re.I)
+        if not match:
+            raise ValueError(f"No original WAV path found in {info}")
+        wav = Path(match.group(1))
     pos = wav.with_suffix(".txt")
-    if not pos.is_file():
+    if not yaml_only and not pos.is_file():
         raise ValueError(f"Position file not found: {pos}")
 
-    subject_output = output / subject
     input_directory = subject_output / "input"
-    input_directory.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(wav, input_directory / settings["wav_name"])
-    shutil.copyfile(pos, input_directory / settings["pos_name"])
-    (subject_output / "info.txt").write_text(
+    if yaml_only:
+        for name in (settings["wav_name"], settings["pos_name"]):
+            if not (input_directory / name).is_file():
+                raise ValueError(f"Existing collected file missing: {input_directory / name}")
+    else:
+        input_directory.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(wav, input_directory / settings["wav_name"])
+        shutil.copyfile(pos, input_directory / settings["pos_name"])
+    metadata = {
+        "subject": subject,
+        "group": settings["group"],
+        "corpus": {"frequency": settings["frequency"]},
+        "source": {
+            "wav": str(wav.resolve()),
+            "position": str(pos.resolve()),
+            "subject_directory": str(wav.parent.resolve()),
+            "identifier": identifier,
+        },
+        "files": {"wav": f"input/{settings['wav_name']}", "data": f"input/{settings['pos_name']}"},
+        "columns": {},  # Fill in the subject-specific sensor/channel names.
+    }
+    if column_template is not None:
+        metadata["column_template"] = column_template
+    metadata_path = subject_output / "corpus.yaml"
+    if metadata_path.is_file():
+        existing = load_config(metadata_path)
+        # Preserve curated subject-specific values (particularly columns).
+        for key in ("corpus", "source", "files", "columns"):
+            if key in existing:
+                metadata[key] = {**metadata.get(key, {}), **get_section(existing, key)}
+        for key, value in existing.items():
+            if key not in metadata:
+                metadata[key] = value
+    metadata_path.write_text(
+        yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True), encoding="utf-8"
+    )
+    if not yaml_only:
+        (subject_output / "info.txt").write_text(
         f'{settings["group"]}, {subject}: "{wav}"\nFrequency: {settings["frequency"]}\n',
         encoding="utf-8",
     )
@@ -99,6 +149,8 @@ def collect_command(
         None, "--identifier", "-i", help="Keyword in the wav name, e.g. rainbow."
     ),
     output: Optional[Path] = typer.Option(None, "--output", "-o"),
+    yaml_only: bool = typer.Option(False, "--yaml-only", help="Only write corpus.yaml for existing collected subjects."),
+    column_template: Optional[Path] = typer.Option(None, "--column-template", help="Shared YAML column template to reference from each corpus.yaml."),
 ) -> None:
     """Copy each subject's keyword wav and pos file into the project layout.
 
@@ -131,11 +183,19 @@ def collect_command(
     if missing:
         raise typer.BadParameter(f"Missing: {', '.join(missing)} (CLI or config).")
 
+    template_ref = None
+    if column_template is not None:
+        template_path = column_template.resolve()
+        if not template_path.is_file():
+            raise typer.BadParameter(f"Column template not found: {template_path}")
+        from ..config import get_columns
+        get_columns(load_config(template_path))
+        template_ref = str(template_path)
     failures = 0
     for subject in subjects:
         try:
             done = collect_subject(
-                subject, Path(root), settings["audio_subdir"], identifier, output, settings
+                subject, Path(root), settings["audio_subdir"], identifier, output, settings, yaml_only=yaml_only, column_template=template_ref
             )
             typer.echo(f"{subject}: wrote {done}")
         except (ValueError, OSError) as error:

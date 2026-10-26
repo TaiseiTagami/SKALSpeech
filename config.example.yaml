@@ -213,3 +213,8 @@ columns:
   phones:                # keep the original name
   Ch1_X: tongue_x        # example sensor columns; use your own header names
   Ch1_Y: tongue_y
+
+# collect also writes <subject>/corpus.yaml containing source paths, group,
+# sample frequency and editable subject-specific columns. process-csv reads it
+# automatically. Subject settings override shared corpus/textgrid/data values;
+# nonempty subject columns mappings extend/override the shared columns map.

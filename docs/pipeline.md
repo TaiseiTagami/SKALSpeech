@@ -143,3 +143,75 @@ defaults to the configured `whisperx.wav_name` stem plus `.TextGrid`.
 
 A CSV is only written when input data and sampled
 TextGrid rows match exactly; no interpolation or sensor resampling is done.
+
+## Subject-specific corpus metadata
+
+`collect` creates `<corpus>/corpus.yaml` with subject, group, source paths,
+`corpus.frequency`, copied file names and an empty `columns` mapping. Edit
+`columns` to label the actual sensor placements for each subject. When
+`pipeline process-csv` runs, it automatically loads this file, overriding
+shared `corpus`, `textgrid`, and `data` settings for that subject. Nonempty
+per-subject `columns` entries override or extend shared column mappings;
+shared column selection remains active. An empty mapping keeps the global
+mapping. `files.data` points to the collected sensor file relative to the
+subject directory. A missing `corpus.yaml` retains the old shared-config
+behavior.
+
+```yaml
+subject: CMF23
+group: Control
+corpus:
+  frequency: 250
+source:
+  wav: 'C:\data\CMF23\rainbow.wav'
+  position: 'C:\data\CMF23\rainbow.txt'
+files:
+  wav: input/speech.wav
+  data: input/pos.txt
+columns:
+  Ch1_X: tongue_tip_x
+  Ch1_Y: tongue_tip_y
+```
+
+Sensor mappings are **per corpus**, so the same channel can have a different
+anatomical meaning for another subject. Keep all shared column keys valid
+for every subject, or omit the shared `columns` section and specify all
+required columns in each subject's metadata.
+
+## Shared sensor column templates
+
+A reusable YAML template can supply a common sensor mapping to several corpora:
+
+```yaml
+# templates/standard-sensors.yaml
+columns:
+  time: time_s
+  words: word
+  Ch1_X: tongue_tip_x
+  Ch1_Y: tongue_tip_y
+```
+
+Each corpus can reference it, with local overrides:
+
+```yaml
+# CMF23/corpus.yaml
+column_template: ../templates/standard-sensors.yaml
+columns:
+  Ch1_X: jaw_x
+```
+
+`process-csv` combines the shared config's `columns`, then the template's
+`columns`, then the corpus's `columns` (highest priority). The final
+mapping controls both selection and renaming; omitted keys retain inherited
+mappings. Template paths in `corpus.yaml` are relative to the corpus folder.
+Alternatively set `process_csv.column_template` in the shared config (relative
+to that config's folder) for all subjects, and override it per subject.
+
+To assign a template during metadata generation:
+
+```powershell
+skalspeech collect CMF23 CMF24 -c collect_control.yaml --yaml-only --column-template templates/standard-sensors.yaml
+```
+
+The template is referenced, not copied, so later edits to the template apply
+to all corpora referencing it. Existing explicit corpus mappings retain priority.
