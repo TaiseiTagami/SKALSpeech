@@ -1,4 +1,4 @@
-﻿"""Run WhisperX or MFA over a list of corpus folders (e.g. tests\\local\\control\\CMF23).
+"""Run WhisperX or MFA over a list of corpus folders (e.g. tests\\local\\control\\CMF23).
 
 Each corpus follows the `collect` layout:
 
@@ -18,6 +18,7 @@ import typer
 from praatio import textgrid
 
 from ..config import get_section, load_config
+from .recording_layout import recordings_for, recording_paths
 from .align_config import _option_arguments
 from .mfa import run_mfa_process
 from .transcribe import transcribe_audio
@@ -45,6 +46,7 @@ def whisper_pipeline_command(
     root: Optional[Path] = typer.Option(
         None, "--root", "-r", help="Folder containing the corpora (e.g. tests\\local\\control)."
     ),
+    recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
 ) -> None:
     """Run WhisperX on each corpus and write a words/sentences TextGrid.
 
@@ -56,16 +58,18 @@ def whisper_pipeline_command(
     settings = get_section(load_config(config), "whisperx")
     failures = 0
     for corpus in _corpora(corpora, root, settings):
-        input_directory = corpus / settings.get("input_dir", "input")
-        wav = input_directory / settings.get("wav_name", "speech.wav")
-        try:
-            if not wav.is_file():
-                raise FileNotFoundError(f"Wav file not found: {wav}")
-            textgrid_path = transcribe_audio(wav, input_directory, settings)
-            typer.echo(f"{corpus}: wrote {textgrid_path}")
-        except (OSError, RuntimeError) as error:
-            failures += 1
-            typer.echo(f"{corpus}: SKIPPED - {error}", err=True)
+        for rid, folder, meta in recordings_for(corpus, recording):
+            input_directory, annotation_dir, _ = recording_paths(folder, meta, "whisper")
+            wav = input_directory / settings.get("wav_name", "speech.wav")
+            try:
+                if not wav.is_file():
+                    raise FileNotFoundError(f"Wav file not found: {wav}")
+                annotation_dir.mkdir(parents=True, exist_ok=True)
+                textgrid_path = transcribe_audio(wav, annotation_dir, settings)
+                typer.echo(f"{corpus}/{rid}: wrote {textgrid_path}")
+            except (OSError, RuntimeError, ValueError) as error:
+                failures += 1
+                typer.echo(f"{corpus}/{rid}: SKIPPED - {error}", err=True)
     raise typer.Exit(1 if failures else 0)
 
 
@@ -122,27 +126,29 @@ def mfa_pipeline_command(
 
     failures = 0
     for corpus in _corpora(corpora, root, settings):
-        input_directory = corpus / settings.get("input_dir", "input")
-        output_directory = corpus / settings.get("output_dir", "output")
-        try:
-            if not input_directory.is_dir():
-                raise FileNotFoundError(f"{input_directory} not found")
-            with tempfile.TemporaryDirectory() as staging:
-                _stage_corpus(input_directory, Path(staging), tiers)
-                code = run_mfa_process(
-                    "align",
-                    [
-                        staging,
-                        str(settings["dictionary"]),
-                        str(settings["acoustic_model"]),
-                        str(output_directory),
-                        *_option_arguments(options),
-                    ],
-                )
-            if code:
-                raise RuntimeError(f"MFA exited with code {code}")
-            typer.echo(f"{corpus}: wrote {output_directory}")
-        except (OSError, ValueError, RuntimeError) as error:
-            failures += 1
-            typer.echo(f"{corpus}: SKIPPED - {error}", err=True)
+        for rid, folder, meta in recordings_for(corpus, recording):
+            input_directory, annotation_dir, _ = recording_paths(folder, meta, "mfa")
+            output_directory = folder / settings.get("output_dir", "output") if meta.get("legacy") else annotation_dir / "mfa"
+            try:
+                if not input_directory.is_dir():
+                    raise FileNotFoundError(f"{input_directory} not found")
+                with tempfile.TemporaryDirectory() as staging:
+                    if meta.get("legacy"):
+                        _stage_corpus(input_directory, Path(staging), tiers)
+                    else:
+                        # Stage only the paired audio and Whisper transcript.
+                        wav = input_directory / settings.get("wav_name", "speech.wav")
+                        grid = annotation_dir / (wav.stem + ".TextGrid")
+                        if not wav.is_file() or not grid.is_file():
+                            raise FileNotFoundError(f"Missing WAV or Whisper TextGrid for {rid}")
+                        shutil.copyfile(wav, Path(staging) / wav.name)
+                        _stage_corpus(annotation_dir, Path(staging), tiers)
+                    code = run_mfa_process("align", [staging, str(settings["dictionary"]),
+                        str(settings["acoustic_model"]), str(output_directory), *_option_arguments(options)])
+                if code:
+                    raise RuntimeError(f"MFA exited with code {code}")
+                typer.echo(f"{corpus}/{rid}: wrote {output_directory}")
+            except (OSError, ValueError, RuntimeError) as error:
+                failures += 1
+                typer.echo(f"{corpus}/{rid}: SKIPPED - {error}", err=True)
     raise typer.Exit(1 if failures else 0)

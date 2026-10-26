@@ -13,3 +13,5 @@ Command-specific documentation for SKALSpeech.
 - [environment](environment.md)
 
 Run `skalspeech --help` or any command's `--help` option for the live CLI reference.
+
+- [Multi-recording layout and migration](recordings.md)

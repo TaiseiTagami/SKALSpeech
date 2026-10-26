@@ -75,6 +75,8 @@ def collect_subject(
     settings: dict,
     yaml_only: bool = False,
     column_template: Optional[str] = None,
+    recording_id: str = "rainbow",
+    recording_type: str = "speech",
 ) -> Path:
     subject_output = output / subject
     if yaml_only and not subject_output.is_dir():
@@ -95,16 +97,18 @@ def collect_subject(
     if not yaml_only and not pos.is_file():
         raise ValueError(f"Position file not found: {pos}")
 
-    input_directory = subject_output / "input"
+    recording_dir = subject_output / "recordings" / recording_id
+    input_directory = recording_dir
     if yaml_only:
-        for name in (settings["wav_name"], settings["pos_name"]):
+        for name in ("speech.wav", "sensors.txt"):
             if not (input_directory / name).is_file():
                 raise ValueError(f"Existing collected file missing: {input_directory / name}")
     else:
         input_directory.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(wav, input_directory / settings["wav_name"])
-        shutil.copyfile(pos, input_directory / settings["pos_name"])
+        shutil.copyfile(wav, input_directory / "speech.wav")
+        shutil.copyfile(pos, input_directory / "sensors.txt")
     metadata = {
+        "schema_version": 2,
         "subject": subject,
         "group": settings["group"],
         "corpus": {"frequency": settings["frequency"]},
@@ -114,7 +118,7 @@ def collect_subject(
             "subject_directory": str(wav.parent.resolve()),
             "identifier": identifier,
         },
-        "files": {"wav": f"input/{settings['wav_name']}", "data": f"input/{settings['pos_name']}"},
+        "recordings": [{"id": recording_id, "type": recording_type}],
         "columns": {},  # Fill in the subject-specific sensor/channel names.
     }
     if column_template is not None:
@@ -129,9 +133,19 @@ def collect_subject(
         for key, value in existing.items():
             if key not in metadata:
                 metadata[key] = value
+    if metadata_path.is_file():
+        current = {item["id"]: item for item in metadata.get("recordings", [])}
+        current[recording_id] = {"id": recording_id, "type": recording_type}
+        metadata["recordings"] = list(current.values())
     metadata_path.write_text(
         yaml.safe_dump(metadata, sort_keys=False, allow_unicode=True), encoding="utf-8"
     )
+    recording_metadata = {"id": recording_id, "type": recording_type,
+        "task": recording_id, "source": metadata["source"], "columns": {}}
+    recording_yaml = recording_dir / "recording.yaml"
+    if recording_yaml.is_file():
+        recording_metadata.update(load_config(recording_yaml))
+    recording_yaml.write_text(yaml.safe_dump(recording_metadata, sort_keys=False), encoding="utf-8")
     if not yaml_only:
         (subject_output / "info.txt").write_text(
         f'{settings["group"]}, {subject}: "{wav}"\nFrequency: {settings["frequency"]}\n',
@@ -151,6 +165,8 @@ def collect_command(
     output: Optional[Path] = typer.Option(None, "--output", "-o"),
     yaml_only: bool = typer.Option(False, "--yaml-only", help="Only write corpus.yaml for existing collected subjects."),
     column_template: Optional[Path] = typer.Option(None, "--column-template", help="Shared YAML column template to reference from each corpus.yaml."),
+    recording_id: Optional[str] = typer.Option(None, "--recording-id", help="Recording ID (default: collect.identifier)."),
+    recording_type: str = typer.Option("speech", "--recording-type", help="speech or reference."),
 ) -> None:
     """Copy each subject's keyword wav and pos file into the project layout.
 
@@ -183,6 +199,11 @@ def collect_command(
     if missing:
         raise typer.BadParameter(f"Missing: {', '.join(missing)} (CLI or config).")
 
+    if recording_type not in ("speech", "reference"):
+        raise typer.BadParameter("--recording-type must be speech or reference")
+    rid = recording_id or identifier
+    if not rid or Path(rid).name != rid or "/" in rid or "\\" in rid or rid in (".", ".."):
+        raise typer.BadParameter("Invalid recording ID")
     template_ref = None
     if column_template is not None:
         template_path = column_template.resolve()
@@ -195,7 +216,7 @@ def collect_command(
     for subject in subjects:
         try:
             done = collect_subject(
-                subject, Path(root), settings["audio_subdir"], identifier, output, settings, yaml_only=yaml_only, column_template=template_ref
+                subject, Path(root), settings["audio_subdir"], identifier, output, settings, yaml_only=yaml_only, column_template=template_ref, recording_id=rid, recording_type=recording_type
             )
             typer.echo(f"{subject}: wrote {done}")
         except (ValueError, OSError) as error:

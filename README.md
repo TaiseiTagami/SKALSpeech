@@ -59,7 +59,7 @@ From the project directory, the final command is:
 The same activation and installation notes are also available in
 [`help.md`](help.md).
 
-Detailed documentation for every command is available in the
+For the new multi-recording speaker layout and safe migration from legacy\n`input/output/processed` folders, see [recording layout](docs/recordings.md).\n\nDetailed documentation for every command is available in the
 [`docs`](docs/README.md) folder.
 
 ## Running Commands
