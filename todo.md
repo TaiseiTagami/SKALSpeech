@@ -1,5 +1,4 @@
 # Development backlog
 
-- [completed] Multi-recording layout merged to main; legacy and recording-level regression tests available.
-- [completed] Repair three Windows pytest failures by isolating Conda state in tests and matching CSV column order; awaiting CI confirmation.
-- [future] Validate full real-data collect -> WhisperX -> MFA -> CSV pipeline with representative corpus.
+- [completed] Multi-recording layout merged; tests previously reported passing.
+- [completed] Implement --sensor-only on process-csv, including reference recordings and inherited column renames; CI pending.

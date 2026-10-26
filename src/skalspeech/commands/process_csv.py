@@ -8,6 +8,7 @@ import typer
 from ..config import get_section, load_config, get_columns
 from .corpus_pipelines import _corpora
 from .recording_layout import recordings_for, recording_paths, recording_config
+from .csv_commands import read_table_rows, select_and_rename_columns, write_rows
 
 
 def process_csv_command(
@@ -17,6 +18,7 @@ def process_csv_command(
     config: Path = typer.Option(..., "--config", "-c", help="YAML config."),
     root: Optional[Path] = typer.Option(None, "--root", "-r", help="Corpus parent folder."),
     recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
+    sensor_only: bool = typer.Option(False, '--sensor-only', help='Process sensor data without TextGrid; include reference recordings.'),
     source: str = typer.Option(
         "mfa", "--source", "-s", help="TextGrid source: mfa (output/) or whisper (input/)."
     ),
@@ -49,7 +51,7 @@ def process_csv_command(
             raise typer.BadParameter(f"process_csv {name} must be a nonempty string.")
     failures = 0
     for corpus in _corpora(corpora, root, corpus_settings):
-        for rid, folder, meta in recordings_for(corpus, recording):
+        for rid, folder, meta in recordings_for(corpus, recording, include_reference=sensor_only):
             try:
                 local_settings = recording_config(settings, corpus, folder, meta, config)
                 input_directory, annotation_dir, processed_dir = recording_paths(folder, meta, source)
@@ -62,11 +64,25 @@ def process_csv_command(
                     grid = annotation_dir / ("mfa" if source == "mfa" else "") / grid_name
                     data = input_directory / "sensors.txt"
                     output = processed_dir / "merged.csv"
-                if not grid.is_file():
-                    raise FileNotFoundError(f"TextGrid not found: {grid}")
                 if not data.is_file():
                     raise FileNotFoundError(f"Sensor data not found: {data}")
-                run_pipeline(grid, data, output, local_settings)
+                if sensor_only:
+                    if data.resolve() == output.resolve():
+                        raise ValueError("Output cannot overwrite sensor input")
+                    delimiter = get_section(local_settings, "data").get("delimiter", "\\t")
+                    rows = read_table_rows(data, delimiter)
+                    if not rows:
+                        raise ValueError(f"Empty sensor table: {data}")
+                    # Ignore linguistic annotation columns in sensor-only mode.
+                    columns = get_section(local_settings, "columns")
+                    selected = {key: value for key, value in columns.items() if key in rows[0]}
+                    if selected:
+                        rows = select_and_rename_columns(rows, selected)
+                    write_rows(output, rows)
+                else:
+                    if not grid.is_file():
+                        raise FileNotFoundError(f"TextGrid not found: {grid}")
+                    run_pipeline(grid, data, output, local_settings)
                 typer.echo(f"{corpus}/{rid}: wrote {output}")
             except (OSError, ValueError, typer.BadParameter) as error:
                 failures += 1
