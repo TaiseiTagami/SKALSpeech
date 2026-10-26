@@ -55,3 +55,15 @@ refuses to overwrite an existing target recording. Inspect the result before
 manually retiring the legacy folders. Use `--recording-id` if the old
 single recording is not the Rainbow Passage. The migration does not infer
 silent reference recordings from numbered filenames.
+
+## Exporting reference sensors
+
+Reference recordings are excluded from Whisper/MFA by default. To convert a
+reference's sensor measurements into an analysis CSV, use:
+
+```powershell
+skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control --recording silent_reference --sensor-only
+```
+
+The resulting `recordings/silent_reference/processed/merged.csv` uses the
+speaker and recording column mappings and requires no TextGrid.

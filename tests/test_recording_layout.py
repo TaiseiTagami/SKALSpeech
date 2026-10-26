@@ -57,3 +57,24 @@ def test_process_csv_recording_layout(tmp_path):
     assert rows[0] == ["tongue_x", "time_s", "word"]
     assert len(rows) == 3
     assert not (speaker / "recordings/silent/processed").exists()
+
+
+def test_sensor_only_exports_reference_with_inherited_column_names(tmp_path):
+    speaker = _speaker(tmp_path)
+    config = tmp_path / "config.yaml"
+    config.write_text("textgrid:\\n  tiers: [words]\\n  instances: false\\n".replace("\\\\n", "\\n"))
+    result = CliRunner().invoke(app, ["pipeline", "process-csv", str(speaker), "-c", str(config), "--recording", "silent", "--sensor-only"])
+    assert result.exit_code == 0, result.output
+    with (speaker / "recordings/silent/processed/merged.csv").open(newline="") as f:
+        rows = list(csv.reader(f))
+    assert rows == [["tongue_x"], ["1"], ["2"]]
+
+
+def test_sensor_only_all_includes_reference_and_speech(tmp_path):
+    speaker = _speaker(tmp_path)
+    config = tmp_path / "config.yaml"
+    config.write_text("corpus:\\n  frequency: 2\\n".replace("\\\\n", "\\n"))
+    result = CliRunner().invoke(app, ["pipeline", "process-csv", str(speaker), "-c", str(config), "--sensor-only"])
+    assert result.exit_code == 0, result.output
+    assert (speaker / "recordings/silent/processed/merged.csv").is_file()
+    assert (speaker / "recordings/rainbow/processed/merged.csv").is_file()

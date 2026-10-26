@@ -215,3 +215,18 @@ skalspeech collect CMF23 CMF24 -c collect_control.yaml --yaml-only --column-temp
 
 The template is referenced, not copied, so later edits to the template apply
 to all corpora referencing it. Existing explicit corpus mappings retain priority.
+
+## Sensor-only reference CSVs
+
+Use `--sensor-only` to process a reference recording without WhisperX, MFA
+or a TextGrid. This mode includes reference recordings and reads
+`recordings/<id>/sensors.txt`, applying the inherited sensor-column mappings
+while ignoring configured annotation columns that are absent from the sensor
+file. It writes `recordings/<id>/processed/merged.csv`.
+
+```powershell
+skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control --recording silent_reference --sensor-only
+```
+
+Without `--sensor-only`, reference recordings are still skipped. The sensor
+file must have a header row; the command does not add a time column.
