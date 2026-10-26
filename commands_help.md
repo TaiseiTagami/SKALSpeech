@@ -1,4 +1,4 @@
-﻿# Command Help
+# Command Help
 
 ## `csv select`
 
@@ -254,3 +254,37 @@ The commands stop with an error, writing nothing, if:
 - a requested tier is not in the TextGrid,
 - the TextGrid and data have different numbers of rows,
 - a column listed in `columns` is not in the merged table.
+
+## `pipeline process-csv`
+
+Batch-process existing MFA or WhisperX TextGrids with sensor position data, without
+running alignment again. This uses the same sampling, merge and column selection
+as `pipeline run`.
+
+```powershell
+skalspeech pipeline process-csv CMF23 CMF24 -c config.yaml --root tests/local/control
+skalspeech pipeline process-csv CMF23 -c config.yaml --source whisper
+```
+
+| Argument / option | Description |
+| --- | --- |
+| `corpora` | Optional subject IDs or absolute paths; defaults to the config corpus list. |
+| `--config`, `-c` | Required YAML configuration. |
+| `--root`, `-r` | Overrides the parent folder for subject IDs. |
+| `--source`, `-s` | `mfa` (default) or `whisper`; selects which TextGrid to use. |
+
+By default, MFA reads `output/speech.TextGrid`, Whisper reads
+`input/speech.TextGrid`, sensor data comes from `input/pos.txt`, and
+`processed/merged.csv` is written within each subject folder.
+
+The `process_csv` section can configure `root`, `corpora`, `input_dir`,
+`mfa_output_dir`, `textgrid_name`, `data_name`, and `output`. Otherwise,
+source-specific `mfa` or `whisperx` settings provide the root, corpora and
+input directory. `corpus.frequency` is required; `textgrid.tiers`,
+`textgrid.instances`, `data.delimiter`, and `columns` work exactly as in
+`pipeline run`. The `files` section is not used.
+
+Each corpus is processed independently. Missing files, row-count mismatches,
+invalid tiers and missing columns are reported as skipped corpora. The command
+returns exit code 1 if any corpus fails; it does not interpolate or resample
+sensor data. See [the full pipeline guide](docs/pipeline.md).
