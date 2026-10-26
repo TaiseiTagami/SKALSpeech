@@ -54,6 +54,6 @@ def test_process_csv_recording_layout(tmp_path):
     assert result.exit_code == 0, result.output
     with (folder / "processed/merged.csv").open(newline="") as f:
         rows = list(csv.reader(f))
-    assert rows[0] == ["time_s", "word", "tongue_x"]
+    assert rows[0] == ["tongue_x", "time_s", "word"]
     assert len(rows) == 3
     assert not (speaker / "recordings/silent/processed").exists()

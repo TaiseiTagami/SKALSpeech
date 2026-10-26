@@ -16,6 +16,7 @@ def test_align_passes_mfa_arguments_and_options(monkeypatch):
         return type("Result", (), {"returncode": 0})()
 
     monkeypatch.setattr("skalspeech.commands.mfa.subprocess.run", fake_run)
+    monkeypatch.setattr("skalspeech.commands.mfa._configured_environment", lambda: None)
 
     result = runner.invoke(
         app,
