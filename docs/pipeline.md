@@ -1,4 +1,4 @@
-﻿# `pipeline`
+# `pipeline`
 
 Processes raw MFA output and sensor data into one CSV in a single step. This
 replaces running `textgrid-to-csv`, `csv from-txt`, `csv insert` and
@@ -92,3 +92,39 @@ skalspeech pipeline mfa CMF23 -c config.yaml --root tests\local\control
   speaker. The input is staged in a temporary folder (`pos.txt` is left out), so
   your input folder is not changed.
 
+
+## Batch CSV processing: `pipeline process-csv`
+
+Convert completed WhisperX or MFA corpora into analysis-ready, sample-aligned CSVs
+without rerunning transcription or alignment. It invokes the exact same merge,
+TextGrid sampling, row-count validation, and column selection as `pipeline run`.
+
+```powershell
+skalspeech pipeline process-csv CMF23 CMF24 -c config.yaml --root tests/local/control
+skalspeech pipeline process-csv CMF23 -c config.yaml --source whisper
+```
+
+Default `--source mfa` reads `<corpus>/output/speech.TextGrid`;
+`--source whisper` reads `<corpus>/input/speech.TextGrid`.
+Both read `<corpus>/input/pos.txt` and write
+`<corpus>/processed/merged.csv`. Use `corpus.frequency`, `textgrid`,
+`data` and `columns` to control the output, just like `pipeline run`.
+Each failed corpus is skipped and reported; any failure causes exit code 1.
+
+Optional config:
+
+```yaml
+process_csv:
+  root: tests/local/control
+  corpora: [CMF23, CMF24]
+  input_dir: input
+  mfa_output_dir: output
+  textgrid_name: speech.TextGrid
+  data_name: pos.txt
+  output: processed/merged.csv
+```
+
+CLI corpus names and `--root` override configured corpora and root. When
+`process_csv` does not set them, source-specific `mfa` or `whisperx`
+settings are reused. A CSV is only written when input data and sampled
+TextGrid rows match exactly; no interpolation or sensor resampling is done.
