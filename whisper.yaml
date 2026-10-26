@@ -41,7 +41,7 @@ whisperx:
   # Folder holding the corpora (same as collect's `output`), and the corpus
   # names under it. Command-line names replace this list; --root overrides root.
   # Absolute paths in the list are used as given.
-  root: tests/local/control
-  corpora: [CMF18, CMF19, CMF22, CMF23, CMF24, CMF25, CMF26, CMF27, CMF28, CMF29]
+  root: tests/local/ALS
+  corpora: [AF19, AF20, AF21, AF22, AF23, AF24, AF25, AF26, AF27, AF28, AF29, AF30]
   input_dir: input
   wav_name: speech.wav
