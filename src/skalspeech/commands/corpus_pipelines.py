@@ -60,6 +60,8 @@ def whisper_pipeline_command(
     for corpus in _corpora(corpora, root, settings):
         for rid, folder, meta in recordings_for(corpus, recording):
             input_directory, annotation_dir, _ = recording_paths(folder, meta, "whisper")
+            if meta.get("legacy"):
+                annotation_dir = input_directory
             wav = input_directory / settings.get("wav_name", "speech.wav")
             try:
                 if not wav.is_file():
@@ -100,6 +102,7 @@ def mfa_pipeline_command(
     root: Optional[Path] = typer.Option(
         None, "--root", "-r", help="Folder containing the corpora (e.g. tests\\local\\control)."
     ),
+    recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
 ) -> None:
     """Run `mfa align` on each corpus using settings from the config.
 
@@ -142,6 +145,7 @@ def mfa_pipeline_command(
                         if not wav.is_file() or not grid.is_file():
                             raise FileNotFoundError(f"Missing WAV or Whisper TextGrid for {rid}")
                         shutil.copyfile(wav, Path(staging) / wav.name)
+                        # Stage only the selected transcript, never unrelated grids.
                         _stage_corpus(annotation_dir, Path(staging), tiers)
                     code = run_mfa_process("align", [staging, str(settings["dictionary"]),
                         str(settings["acoustic_model"]), str(output_directory), *_option_arguments(options)])

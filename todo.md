@@ -1,3 +1,4 @@
 # Development backlog
 
-- [in progress] [planned] Multi-recording speaker layout, collect, Whisper/MFA/CSV processing, legacy compatibility, migration and docs. Implemented on feature branch; Windows tests pending.
+- [completed] Multi-recording speaker layout and migration merged to main; verification incomplete.
+- [in progress] [planned] Repair post-merge pytest failures: MFA --recording parameter, legacy Whisper path and obsolete collection test expectations. GitHub Actions verification pending.

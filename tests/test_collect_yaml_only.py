@@ -12,7 +12,7 @@ def test_yaml_only_preserves_existing_files(tmp_path):
     meta = yaml.safe_load((target / "corpus.yaml").read_text())
     meta["columns"] = {"Ch1_X": "jaw_x"}
     (target / "corpus.yaml").write_text(yaml.safe_dump(meta))
-    (target / "input" / "speech.wav").write_bytes(b"preserve")
+    (target / "recordings" / "rainbow" / "speech.wav").write_bytes(b"preserve")
     (target / "info.txt").write_text("preserve")
     collect_subject("CMF23", tmp_path / "source", "EMA/pos", "rainbow", tmp_path / "out", settings, yaml_only=True)
     assert (target / "input" / "speech.wav").read_bytes() == b"preserve"

@@ -1,4 +1,4 @@
 # Current plan
 
-- Validate multi-recording CLI and migration with Windows bridge.
-- Fix any failures before merging.
+- Verify GitHub Actions test results after the main-branch compatibility repairs.
+- Repair any remaining test failures and run regression checks.

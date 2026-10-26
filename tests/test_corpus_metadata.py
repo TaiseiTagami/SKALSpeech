@@ -22,7 +22,9 @@ def test_collect_writes_corpus_yaml(tmp_path):
     assert metadata["group"] == "Control"
     assert metadata["corpus"]["frequency"] == 2
     assert metadata["source"]["wav"] == str((source / "rainbow.wav").resolve())
-    assert metadata["files"]["data"] == "input/pos.txt"
+    assert metadata["recordings"] == [{"id": "rainbow", "type": "speech"}]
+    assert (dest / "recordings" / "rainbow" / "speech.wav").is_file()
+    assert (dest / "recordings" / "rainbow" / "sensors.txt").is_file()
     assert metadata["columns"] == {}
 
 
