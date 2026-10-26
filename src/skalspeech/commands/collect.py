@@ -89,7 +89,7 @@ def collect_subject(
         info = subject_output / "info.txt"
         if not info.is_file():
             raise ValueError(f"Original source unavailable and {info} is missing")
-        match = re.search(r'"([^"]+\\.wav)"', info.read_text(encoding="utf-8"), re.I)
+        match = re.search(r'"([^"]+\.wav)"', info.read_text(encoding="utf-8"), re.I)
         if not match:
             raise ValueError(f"No original WAV path found in {info}")
         wav = Path(match.group(1))

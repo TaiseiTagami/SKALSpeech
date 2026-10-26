@@ -1,4 +1,4 @@
 # Current plan
 
-- Inspect GitHub Actions result for the latest main commit.
-- Repair remaining test failures based on verified diagnostics.
+- Check GitHub Actions for main after correcting YAML-only info.txt parsing.
+- Obtain full pytest diagnostics and fix any remaining failures.
