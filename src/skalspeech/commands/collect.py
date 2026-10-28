@@ -98,12 +98,19 @@ def collect_subject(
         raise ValueError(f"Position file not found: {pos}")
 
     recording_dir = subject_output / "recordings" / recording_id
+    recording_yaml = recording_dir / "recording.yaml"
+    existing_recording = load_config(recording_yaml) if recording_yaml.is_file() else {}
+    existing_source = get_section(existing_recording, "source")
     input_directory = recording_dir
     if yaml_only:
+        if existing_source.get("wav") and Path(existing_source["wav"]) != wav:
+            raise ValueError(f"Existing {recording_id} source differs: {existing_source['wav']} != {wav}. Recollect explicitly.")
         for name in ("speech.wav", "sensors.txt"):
             if not (input_directory / name).is_file():
                 raise ValueError(f"Existing collected file missing: {input_directory / name}")
     else:
+        if existing_source.get("wav") and Path(existing_source["wav"]) != wav:
+            raise ValueError(f"Recording {recording_id} already belongs to {existing_source['wav']}; refusing to overwrite.")
         input_directory.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(wav, input_directory / "speech.wav")
         shutil.copyfile(pos, input_directory / "sensors.txt")
@@ -147,9 +154,9 @@ def collect_subject(
     )
     recording_metadata = {"id": recording_id, "type": recording_type,
         "task": recording_id, "source": metadata["source"], "columns": {}}
-    recording_yaml = recording_dir / "recording.yaml"
-    if recording_yaml.is_file():
-        recording_metadata.update(load_config(recording_yaml))
+    if existing_recording:
+        recording_metadata = {**existing_recording, **recording_metadata}
+        recording_metadata["columns"] = get_section(existing_recording, "columns")
     recording_yaml.write_text(yaml.safe_dump(recording_metadata, sort_keys=False), encoding="utf-8")
     if not yaml_only:
         (subject_output / "info.txt").write_text(
