@@ -19,7 +19,6 @@ import typer
 import yaml
 
 from ..config import get_section, load_config, load_command_config
-from .corpus_architecture import template_snapshot, saved_architecture, recording_path, file_paths
 
 
 def _find_one(parent: Path, matches, description: str) -> Path:
@@ -103,10 +102,7 @@ def collect_subject(
     for label, name, ext in (("wav_name", wav_name, ".wav"), ("pos_name", pos_name, ".txt")):
         if not isinstance(name, str) or Path(name).name != name or not name.lower().endswith(ext):
             raise ValueError(f"collect.{label} must be a filename ending in {ext}")
-    architecture = saved_architecture(subject_output) or template_snapshot(settings, settings.get("_config_file"))
-    recording_dir = recording_path(subject_output, recording_id, architecture)
-    locations = file_paths(subject_output, recording_id, architecture)
-    wav_target, pos_target = locations["audio"], locations["sensors"]
+    recording_dir = subject_output / "recordings" / recording_id
     recording_yaml = recording_dir / "recording.yaml"
     existing_recording = load_config(recording_yaml) if recording_yaml.is_file() else {}
     existing_source = get_section(existing_recording, "source")
@@ -114,20 +110,17 @@ def collect_subject(
     if yaml_only:
         if existing_source.get("wav") and Path(existing_source["wav"]) != wav:
             raise ValueError(f"Existing {recording_id} source differs: {existing_source['wav']} != {wav}. Recollect explicitly.")
-        for target in (wav_target, pos_target):
-            if not target.is_file():
-                raise ValueError(f"Existing collected file missing: {target}")
+        for name in (wav_name, pos_name):
+            if not (input_directory / name).is_file():
+                raise ValueError(f"Existing collected file missing: {input_directory / name}")
     else:
         if existing_source.get("wav") and Path(existing_source["wav"]) != wav:
             raise ValueError(f"Recording {recording_id} already belongs to {existing_source['wav']}; refusing to overwrite.")
         input_directory.mkdir(parents=True, exist_ok=True)
-        wav_target.parent.mkdir(parents=True, exist_ok=True)
-        pos_target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copyfile(wav, wav_target)
-        shutil.copyfile(pos, pos_target)
+        shutil.copyfile(wav, input_directory / wav_name)
+        shutil.copyfile(pos, input_directory / pos_name)
     metadata = {
         "schema_version": 2,
-        "architecture": architecture,
         "subject": subject,
         "group": settings["group"],
         "corpus": {"frequency": settings["frequency"]},
@@ -146,7 +139,7 @@ def collect_subject(
     if metadata_path.is_file():
         existing = load_config(metadata_path)
         # Preserve curated subject-specific values (particularly columns).
-        for key in ("corpus", "source", "files", "columns"):
+        for key in ("corpus", "files", "columns"):
             if key in existing:
                 metadata[key] = {**metadata.get(key, {}), **get_section(existing, key)}
         for key, value in existing.items():
@@ -166,8 +159,7 @@ def collect_subject(
     )
     recording_metadata = {"id": recording_id, "type": recording_type,
         "task": recording_id, "source": metadata["source"],
-        "files": {"wav": str(locations["audio"].relative_to(recording_dir)),
-                  "data": str(locations["sensors"].relative_to(recording_dir))}, "columns": {}}
+        "files": {"wav": wav_name, "data": pos_name}, "columns": {}}
     if existing_recording:
         recording_metadata = {**existing_recording, **recording_metadata}
         recording_metadata["columns"] = get_section(existing_recording, "columns")
@@ -199,9 +191,7 @@ def collect_command(
     Subjects with no, or more than one, matching folder or wav are skipped
     with an error; the command exits non-zero if any were skipped.
     """
-    loaded = load_command_config("collect", config)
-    settings = {**get_section(loaded, "collect"), "architecture_template": loaded.get("architecture_template"),
-                "_config_file": config}
+    settings = get_section(load_command_config("collect", config), "collect")
     subjects = folders or settings.get("folders") or []
     identifier = identifier or settings.get("identifier")
     output = output or (Path(settings["output"]) if settings.get("output") else None)

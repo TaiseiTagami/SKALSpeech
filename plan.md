@@ -1,5 +1,4 @@
-# Current objective: centralized required defaults
+# Current plan
 
-- Add config/default YAMLs and strict validation for missing defaults.
-- Integrate collect, WhisperX, MFA, CSV and single-file config consumers.
-- Add regression tests, update documentation, verify CI.
+- Verify architecture snapshots, collection and processing with CI.
+- Add and run architecture-specific regression tests; fix failures.
