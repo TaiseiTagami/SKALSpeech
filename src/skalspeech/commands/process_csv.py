@@ -43,7 +43,7 @@ def process_csv_command(
     grid_dir = output_dir if source == "mfa" else input_dir
     grid_name = section.get("textgrid_name", Path(align_settings.get("wav_name", "speech.wav")).stem + ".TextGrid")
     data_name = section.get("data_name", "pos.txt")
-    destination = section.get("output", "processed/merged.csv")
+    destination = section["output"]
     for name, value in (("input_dir", input_dir), ("grid_dir", grid_dir),
                         ("textgrid_name", grid_name), ("data_name", data_name), ("output", destination)):
         if not isinstance(value, str) or not value:
@@ -59,7 +59,6 @@ def process_csv_command(
                 # Shared defaults < speaker files < recording files.
                 # Explicit process_csv paths take precedence over metadata.
                 file_settings = {**get_section(speaker_meta, "files"), **get_section(recording_meta, "files")}
-                path_settings = {**get_section(speaker_meta, "process_csv"), **get_section(recording_meta, "process_csv")}
                 path_settings = {**section, **get_section(speaker_meta, "process_csv"), **get_section(recording_meta, "process_csv")}
                 if meta.get("legacy"):
                     grid = corpus / grid_dir / grid_name
@@ -74,10 +73,10 @@ def process_csv_command(
                     if Path(wav_name).parent != Path("."):
                         wav_name = Path(wav_name).name
                     default_grid = Path("annotations") / ("mfa" if source == "mfa" else "") / (Path(wav_name).stem + ".TextGrid")
-                    sensor_name = get_section(recording_meta, "files").get("data", "sensors.txt")
-                    grid = folder / path_settings.get("textgrid", str(default_grid))
-                    data = folder / path_settings.get("data", sensor_name)
-                    output = folder / path_settings.get("output", destination)
+                    sensor_name = get_section(recording_meta, "files").get("data") or "sensors.txt"
+                    grid = folder / (path_settings.get("textgrid") or str(default_grid))
+                    data = folder / (path_settings.get("data") or sensor_name)
+                    output = folder / (path_settings.get("output") or destination)
                 if output.resolve() in (data.resolve(), grid.resolve()):
                     raise ValueError("Output path must not overwrite an input file.")
                 if not data.is_file():

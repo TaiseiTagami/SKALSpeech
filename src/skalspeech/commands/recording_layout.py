@@ -67,3 +67,14 @@ def recording_config(shared: dict, speaker: Path, folder: Path, metadata: dict, 
     if columns:
         config["columns"] = columns
     return config
+
+
+def recording_file_names(folder: Path, metadata: dict, settings: dict):
+    """Use recording metadata first, then command defaults."""
+    files = get_section(metadata, "files")
+    wav = files.get("wav") or settings["wav_name"]
+    pos = files.get("data") or settings.get("pos_name", "sensors.txt")
+    for name in (wav, pos):
+        if not isinstance(name, str) or not name or Path(name).name != name:
+            raise typer.BadParameter(f"Invalid recording filename: {name}")
+    return wav, pos

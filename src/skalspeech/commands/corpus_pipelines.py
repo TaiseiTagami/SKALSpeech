@@ -18,7 +18,7 @@ import typer
 from praatio import textgrid
 
 from ..config import get_section, load_config, load_command_config
-from .recording_layout import recordings_for, recording_paths
+from .recording_layout import recordings_for, recording_paths, recording_file_names
 from .align_config import _option_arguments
 from .mfa import run_mfa_process
 from .transcribe import transcribe_audio
@@ -62,7 +62,7 @@ def whisper_pipeline_command(
             input_directory, annotation_dir, _ = recording_paths(folder, meta, "whisper")
             if meta.get("legacy"):
                 annotation_dir = input_directory
-            wav = input_directory / settings.get("wav_name", "speech.wav")
+            wav = input_directory / recording_file_names(folder, meta, settings)[0]
             try:
                 if not wav.is_file():
                     raise FileNotFoundError(f"Wav file not found: {wav}")
