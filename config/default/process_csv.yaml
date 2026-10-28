@@ -1,0 +1,20 @@
+# Required batch CSV defaults. All paths for v2 are recording-relative.
+corpus:
+  frequency: 250
+textgrid:
+  tiers: [words, phones]
+  instances: true
+data:
+  delimiter: "\t"
+columns: {}
+process_csv:
+  root: null
+  corpora: []
+  input_dir: input
+  mfa_output_dir: output
+  textgrid_name: speech.TextGrid
+  data_name: pos.txt
+  output: processed/merged.csv
+  textgrid: null          # null = infer annotation path
+  data: null              # null = recording metadata / sensors.txt
+  column_template: null

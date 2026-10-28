@@ -1,0 +1,2 @@
+# Default column selection for csv select. Set columns in -c YAML.
+columns: {}

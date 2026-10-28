@@ -1,0 +1,14 @@
+# Required MFA defaults. Paths may be overridden in -c YAML.
+mfa:
+  dictionary: models/dictionary/english_us_arpa.dict
+  acoustic_model: models/acoustic/english_us_arpa.zip
+  options:
+    clean: true
+    single_speaker: true
+    num_jobs: 4
+  root: null
+  corpora: []
+  input_dir: input
+  output_dir: output
+  wav_name: speech.wav
+  transcript_tiers: [words]

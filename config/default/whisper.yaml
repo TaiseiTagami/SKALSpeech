@@ -1,0 +1,15 @@
+# Required WhisperX defaults.
+whisperx:
+  model: models/whisper/small
+  align_model: WAV2VEC2_ASR_LARGE_LV60K_960H
+  language: en
+  device: cpu
+  compute_type: int8
+  keep_json: false
+  executable: null
+  options:
+    beam_size: 5
+  root: null
+  corpora: []
+  input_dir: input
+  wav_name: speech.wav

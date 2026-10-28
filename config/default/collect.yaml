@@ -1,0 +1,13 @@
+# Required collection defaults. Missing file/key is a configuration error.
+collect:
+  root: null              # Set in your own collect config
+  audio_subdir: 'EMA\pos'
+  identifier: rainbow
+  output: null            # Set in your own collect config
+  group: Control
+  frequency: 250
+  folders: []
+  wav_name: speech.wav
+  pos_name: sensors.txt
+  recording_id: null      # null = use identifier
+  recording_type: speech

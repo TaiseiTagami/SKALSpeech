@@ -1,0 +1,13 @@
+# Defaults for single-file pipeline run and from-config.
+corpus:
+  frequency: 250
+textgrid:
+  tiers: null
+  instances: true
+data:
+  delimiter: "\t"
+columns: {}
+files:
+  textgrid: null
+  data: null
+  output: null
