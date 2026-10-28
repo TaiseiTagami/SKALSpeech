@@ -1,0 +1,74 @@
+# EMA sensor mapping: Ch4-Ch6 and Ch11-Ch16.
+# Speaker-specific corpus.yaml columns override these mappings.
+# Verify physical sensor assignments before analysis.
+columns:
+  time: null
+  words: null
+  words_int: null
+  words_instance: null
+  phones: null
+  phones_int: null
+  phones_instance: null
+  # Ch4: lr
+  Ch4_X: lr_x
+  Ch4_Y: lr_y
+  Ch4_Z: lr_z
+  Ch4_phi: lr_phi
+  Ch4_theta: lr_theta
+  Ch4_RMS: lr_rms
+  # Ch5: rr
+  Ch5_X: rr_x
+  Ch5_Y: rr_y
+  Ch5_Z: rr_z
+  Ch5_phi: rr_phi
+  Ch5_theta: rr_theta
+  Ch5_RMS: rr_rms
+  # Ch6: mr
+  Ch6_X: mr_x
+  Ch6_Y: mr_y
+  Ch6_Z: mr_z
+  Ch6_phi: mr_phi
+  Ch6_theta: mr_theta
+  Ch6_RMS: mr_rms
+  # Ch11: pt
+  Ch11_X: pt_x
+  Ch11_Y: pt_y
+  Ch11_Z: pt_z
+  Ch11_phi: pt_phi
+  Ch11_theta: pt_theta
+  Ch11_RMS: pt_rms
+  # Ch12: tt
+  Ch12_X: tt_x
+  Ch12_Y: tt_y
+  Ch12_Z: tt_z
+  Ch12_phi: tt_phi
+  Ch12_theta: tt_theta
+  Ch12_RMS: tt_rms
+  # Ch13: ll
+  Ch13_X: ll_x
+  Ch13_Y: ll_y
+  Ch13_Z: ll_z
+  Ch13_phi: ll_phi
+  Ch13_theta: ll_theta
+  Ch13_RMS: ll_rms
+  # Ch14: ul
+  Ch14_X: ul_x
+  Ch14_Y: ul_y
+  Ch14_Z: ul_z
+  Ch14_phi: ul_phi
+  Ch14_theta: ul_theta
+  Ch14_RMS: ul_rms
+  # Ch15: jc
+  Ch15_X: jc_x
+  Ch15_Y: jc_y
+  Ch15_Z: jc_z
+  Ch15_phi: jc_phi
+  Ch15_theta: jc_theta
+  Ch15_RMS: jc_rms
+  # Ch16: jm
+  Ch16_X: jm_x
+  Ch16_Y: jm_y
+  Ch16_Z: jm_z
+  Ch16_phi: jm_phi
+  Ch16_theta: jm_theta
+  Ch16_RMS: jm_rms
