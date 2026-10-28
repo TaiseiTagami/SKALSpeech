@@ -60,7 +60,7 @@ def process_csv_command(
                 # Explicit process_csv paths take precedence over metadata.
                 file_settings = {**get_section(speaker_meta, "files"), **get_section(recording_meta, "files")}
                 path_settings = {**get_section(speaker_meta, "process_csv"), **get_section(recording_meta, "process_csv")}
-                path_settings = {**section, **path_settings}
+                path_settings = {**section, **get_section(speaker_meta, "process_csv"), **get_section(recording_meta, "process_csv")}
                 if meta.get("legacy"):
                     grid = corpus / grid_dir / grid_name
                     local_files = get_section(load_config(corpus / "corpus.yaml"), "files") if (corpus / "corpus.yaml").is_file() else {}

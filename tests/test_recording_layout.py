@@ -78,3 +78,21 @@ def test_sensor_only_all_includes_reference_and_speech(tmp_path):
     assert result.exit_code == 0, result.output
     assert (speaker / "recordings/silent/processed/merged.csv").is_file()
     assert (speaker / "recordings/rainbow/processed/merged.csv").is_file()
+
+
+def test_process_csv_custom_recording_paths(tmp_path):
+    speaker = _speaker(tmp_path)
+    folder = speaker / "recordings" / "silent"
+    (folder / "custom_pos.txt").write_text("Ch1_X\n3\n4\n")
+    (folder / "recording.yaml").write_text(yaml.safe_dump({
+        "id": "silent", "type": "reference",
+        "files": {"data": "custom_pos.txt"},
+        "process_csv": {"output": "exports/reference.csv"},
+    }))
+    config = tmp_path / "config.yaml"
+    config.write_text("process_csv:\n  output: processed/shared.csv\n")
+    result = CliRunner().invoke(app, ["pipeline", "process-csv", str(speaker),
+        "-c", str(config), "--recording", "silent", "--sensor-only"])
+    assert result.exit_code == 0, result.output
+    with (folder / "exports/reference.csv").open(newline="") as f:
+        assert list(csv.reader(f)) == [["tongue_x"], ["3"], ["4"]]
