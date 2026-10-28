@@ -1,4 +1,4 @@
 # Current plan
 
-- Confirm documentation-only CI for the updated v2 collection and reference workflow.
-- Real-data smoke test remains dependent on representative audio and sensors.
+- Verify configurable per-recording CSV paths with Windows CI.
+- Validate real-data path examples when sample corpora are available.

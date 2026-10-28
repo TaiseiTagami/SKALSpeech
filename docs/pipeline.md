@@ -93,3 +93,24 @@ Batch commands retain legacy speaker-level `input/speech.wav`,
 `input/pos.txt`, `output/speech.TextGrid`, `processed/merged.csv`
 compatibility. New collection uses v2 instead. See
 [recordings](recordings.md) for the copy-only migration script.
+
+## Configurable CSV input/output paths
+
+For version 2 recordings, `process_csv.output` is relative to each recording
+folder (default `processed/merged.csv`). `process_csv.data` and
+`process_csv.textgrid` can override the recording input paths. The recording
+`recording.yaml` `files.data` is used when no explicit data path is set;
+otherwise the default is `sensors.txt`. The TextGrid defaults to
+`annotations/mfa/speech.TextGrid` (or `annotations/speech.TextGrid` with
+`--source whisper`).
+
+```yaml
+process_csv:
+  output: processed/rainbow_processed.csv
+  # data: pos.txt
+  # textgrid: annotations/mfa/speech.TextGrid
+```
+
+You may also place a `process_csv` section in a speaker's `corpus.yaml` or
+a recording's `recording.yaml` for individual overrides. This does not
+change the `pipeline run` or `pipeline from-config` path rules.

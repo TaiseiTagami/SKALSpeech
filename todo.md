@@ -1,5 +1,4 @@
 # Development backlog
 
-- [completed] Multi-recording layout and sensor-only reference CSV implemented.
-- [completed] Refresh README, command guides, recording documentation and example YAML files for v2; CI pending.
-- [future] Real-data end-to-end integration validation.
+- [completed] Implement configurable process-csv recording input and output paths; CI verification pending.
+- [future] Real-data end-to-end validation.
