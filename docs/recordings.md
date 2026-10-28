@@ -67,3 +67,21 @@ skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control 
 
 The resulting `recordings/silent_reference/processed/merged.csv` uses the
 speaker and recording column mappings and requires no TextGrid.
+
+## Reference recordings and sensor-only processing
+
+Collection does not create a blank TextGrid for a reference recording. It
+copies the matching WAV and sensor TXT, creates `recording.yaml` with
+`type: reference`, and registers the recording in speaker `corpus.yaml`.
+Whisper and MFA skip reference recordings. To export the sensor measurements
+with inherited column mappings, run:
+
+```powershell
+skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control --recording silent_reference --sensor-only
+```
+
+This writes `recordings/silent_reference/processed/merged.csv` without a
+TextGrid. The command does not add a time column. Without `--recording`,
+`--sensor-only` includes both speech and reference recordings. Collection
+still selects one matching source WAV per speaker per invocation; it does
+not automatically discover or classify numbered WAV files.

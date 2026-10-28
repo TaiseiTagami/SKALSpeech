@@ -1,4 +1,5 @@
 # Development backlog
 
-- [completed] Multi-recording layout merged; tests previously reported passing.
-- [completed] Implement --sensor-only on process-csv, including reference recordings and inherited column renames; CI pending.
+- [completed] Multi-recording layout and sensor-only reference CSV implemented.
+- [completed] Refresh README, command guides, recording documentation and example YAML files for v2; CI pending.
+- [future] Real-data end-to-end integration validation.

@@ -39,3 +39,7 @@ skalspeech environment open
 The `open` command starts a new shell because a command-line program cannot
 activate the PowerShell session that launched it. The current shell is not
 changed.
+
+The v2 recording layout, migration and reference processing are covered in
+[recordings](docs/recordings.md), [collect](docs/collect.md) and
+[pipeline](docs/pipeline.md).
