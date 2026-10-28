@@ -1,0 +1,88 @@
+
+# =============================================================================
+# SKALSpeech — CSV Processing
+# Multi-recording architecture (v2)
+# =============================================================================
+# skalspeech pipeline process-csv -c process_csv.yaml --recording rainbow
+# skalspeech pipeline process-csv -c process_csv.yaml --recording silent_reference --sensor-only
+# Sensor sampling frequency
+# Speaker corpus.yaml can override this for individual speakers.
+corpus:
+  frequency: 250
+
+# TextGrid sampling settings for speech recordings
+textgrid:
+  tiers:
+    - words
+    - phones
+  instances: true
+
+# Sensor TXT settings
+data:
+  delimiter: "\t"
+
+# =============================================================================
+# Batch CSV processing
+# =============================================================================
+
+process_csv:
+  # Parent directory containing ALS speaker folders
+  root: tests/local/Control
+
+  # Speakers to process
+  corpora:
+    - AF19
+    - AF20
+    - AF21
+    - AF22
+    - AF23
+    - AF24
+    - AF25
+    - AF26
+    - AF27
+    - AF28
+    - AF29
+    - AF30
+
+  # Optional shared column template
+  # column_template: templates/ema-columns.yaml
+
+# =============================================================================
+# Column selection and renaming
+# =============================================================================
+
+# Optional shared mappings.
+# Speaker corpus.yaml and recording.yaml can override these.
+#
+# columns:
+#   time: time_s
+#   words: word
+#   phones: phone
+#   Ch1_X: tongue_tip_x
+#   Ch1_Y: tongue_tip_y
+
+# =============================================================================
+# Recording selection
+# =============================================================================
+
+# DEFAULT: Rainbow Passage (MFA-aligned TextGrid)
+# skalspeech pipeline process-csv -c process_csv.yaml --recording rainbow
+
+# ALTERNATIVE: Rainbow Passage (WhisperX TextGrid)
+# skalspeech pipeline process-csv -c process_csv.yaml --recording rainbow --source whisper
+
+# SILENT REFERENCE: No TextGrid required
+# skalspeech pipeline process-csv -c process_csv.yaml --recording silent_reference --sensor-only
+
+# =============================================================================
+# Expected outputs:
+#
+# AF19/
+#   recordings/
+#     rainbow/
+#       processed/
+#         merged.csv
+#     silent_reference/
+#       processed/
+#         merged.csv
+# =============================================================================

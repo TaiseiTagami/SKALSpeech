@@ -1,0 +1,38 @@
+# collect_control.yaml
+# SKALSpeech — Control Group Collection
+# Version 2: Multi-recording architecture
+
+collect:
+  # Original EMA dataset
+  root: '\\bigdatavuhcifs.mc.vanderbilt.edu\HSS2\Data\Depts\Labs\Mefferdlab\EMA Vandy Controls'
+  audio_subdir: 'EMA\pos'
+
+  # Default recording to collect
+  identifier: rainbow
+
+  # Destination for collected speaker data
+  output: tests/local/control
+
+  # Speaker metadata
+  group: Control
+  frequency: 250
+
+  # Speakers
+  folders:
+    - CMF17
+    - CMF18
+    - CMF19
+    - CMF22
+    - CMF23
+    - CMF24
+    - CMF25
+    - CMF26
+    - CMF27
+    - CMF28
+    - CMF29
+    - CMF30
+
+  # Legacy compatibility settings
+  # Version 2 always stores files as speech.wav and sensors.txt
+  wav_name: speech.wav
+  pos_name: sensors.txt

@@ -1,0 +1,69 @@
+
+# =============================================================================
+# SKALSpeech — WhisperX transcription and forced alignment
+# Multi-recording architecture (v2)
+# =============================================================================
+# skalspeech pipeline whisper -c whisper.yaml --recording rainbow
+whisperx:
+  # Whisper speech recognition model
+  model: models/whisper/small
+
+  # Forced alignment model
+  align_model: WAV2VEC2_ASR_LARGE_LV60K_960H
+
+  language: en
+  device: cpu
+  compute_type: int8
+
+  # Keep intermediate WhisperX JSON
+  keep_json: false
+
+  # Optional custom WhisperX executable
+  # executable: 'C:\tools\whisperx\Scripts\whisperx.exe'
+
+  # Additional WhisperX options
+  options:
+    beam_size: 5
+    # batch_size: 4
+    # initial_prompt: "The rainbow passage."
+    # vad_method: silero
+
+  # Parent directory containing ALS speaker folders
+  root: tests/local/ALS
+
+  # Speakers to process
+  corpora:
+    - AF19
+    - AF20
+    - AF21
+    - AF22
+    - AF23
+    - AF24
+    - AF25
+    - AF26
+    - AF27
+    - AF28
+    - AF29
+    - AF30
+
+# =============================================================================
+# Recording selection
+# =============================================================================
+
+# DEFAULT: Rainbow Passage
+# skalspeech pipeline whisper -c whisper.yaml --recording rainbow
+
+# SILENT REFERENCE:
+# WhisperX is not needed for silence recordings.
+# Use process-csv --sensor-only instead.
+
+# =============================================================================
+# Expected output for each speaker:
+#
+# AF19/
+#   recordings/
+#     rainbow/
+#       speech.wav
+#       annotations/
+#         speech.TextGrid
+# =============================================================================

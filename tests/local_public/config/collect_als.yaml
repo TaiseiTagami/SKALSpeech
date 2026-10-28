@@ -1,0 +1,26 @@
+# collect_control.yaml
+# SKALSpeech — Control Group Collection
+# Version 2: Multi-recording architecture
+
+collect:
+  # Original EMA dataset
+  root: '\\bigdatavuhcifs.mc.vanderbilt.edu\HSS2\Data\Depts\Labs\Mefferdlab\EMA Vandy ALS'
+  audio_subdir: 'EMA\pos'
+
+  # Default recording to collect
+  identifier: rainbow
+
+  # Destination for collected speaker data
+  output: tests/local/ALS
+
+  # Speaker metadata
+  group: ALS
+  frequency: 250
+
+  # Speakers
+  folders: [AF19, AF20, AF21, AF22, AF23, AF24, AF25, AF26, AF27, AF28, AF29, AF30]
+
+  # Legacy compatibility settings
+  # Version 2 always stores files as speech.wav and sensors.txt
+  wav_name: speech.wav
+  pos_name: sensors.txt

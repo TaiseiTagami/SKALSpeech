@@ -1,0 +1,64 @@
+# =============================================================================
+# SKALSpeech — Montreal Forced Aligner
+# Multi-recording architecture (v2)
+# =============================================================================
+# skalspeech pipeline mfa -c mfa.yaml --recording rainbow
+
+mfa:
+  # Pronunciation dictionary and acoustic model
+  dictionary: models/dictionary/english_us_arpa.dict
+  acoustic_model: models/acoustic/english_us_arpa.zip
+
+  # MFA alignment options
+  options:
+    clean: true
+    single_speaker: true
+    num_jobs: 4
+    # beam: 100
+    # retry_beam: 400
+
+  # Parent directory containing ALS speaker folders
+  root: tests/local/ALS
+
+  # Speakers to process
+  corpora:
+    - AF19
+    - AF20
+    - AF21
+    - AF22
+    - AF23
+    - AF24
+    - AF25
+    - AF26
+    - AF27
+    - AF28
+    - AF29
+    - AF30
+
+  # Only the words tier is passed to MFA
+  transcript_tiers: [words]
+
+# =============================================================================
+# Recording selection
+# =============================================================================
+
+# DEFAULT: Rainbow Passage
+# skalspeech pipeline mfa -c mfa.yaml --recording rainbow
+
+# SILENT REFERENCE:
+# MFA is not needed for silence recordings.
+# Use process-csv --sensor-only instead.
+
+# =============================================================================
+# Expected output for each speaker:
+#
+# AF19/
+#   recordings/
+#     rainbow/
+#       speech.wav
+#       pos.txt (or sensors.txt in the current v2 implementation)
+#       annotations/
+#         speech.TextGrid
+#         mfa/
+#           speech.TextGrid
+# =============================================================================
