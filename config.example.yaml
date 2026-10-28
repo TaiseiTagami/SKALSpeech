@@ -14,7 +14,7 @@
 #   collect             -> skalspeech collect
 #   whisperx            -> skalspeech transcribe, forced-align, pipeline whisper
 #   mfa                 -> skalspeech align-config, pipeline mfa
-  process_csv         -> skalspeech pipeline process-csv
+  # process_csv         -> skalspeech pipeline process-csv
 #   corpus/textgrid/data/columns/files
 #                       -> skalspeech pipeline run / from-config, csv select
 # =============================================================================
@@ -23,7 +23,8 @@
 # -----------------------------------------------------------------------------
 # collect: copy each subject's keyword wav + position file into the project
 # layout.   skalspeech collect CMF17 CMF18 -c config.yaml
-# Result:   <output>\<ID>\info.txt, <output>\<ID>\input\<wav_name>, ...\<pos_name>
+# Result: <output>/<ID>/corpus.yaml and recordings/<identifier>/
+#         speech.wav, sensors.txt and recording.yaml
 # -----------------------------------------------------------------------------
 collect:
   # Folder that contains the subject folders (CMF17_07242024, ...).
@@ -42,7 +43,7 @@ collect:
   # Where the per-subject folders are written.
   output: 'tests\local\control'
 
-  # Names the copied files are given.
+  # Legacy filename keys; v2 writes speech.wav and sensors.txt.
   wav_name: speech.wav
   pos_name: pos.txt
 
@@ -174,9 +175,9 @@ process_csv:
 # Relative paths here are relative to this YAML file.
 # -----------------------------------------------------------------------------
 files:
-  textgrid: output/speech.TextGrid     # MFA output
-  data: input/pos.txt                  # raw sensor data
-  output: processed/merged.csv         # merged result (folders are created)
+  textgrid: tests/local/control/CMF21/recordings/rainbow/annotations/mfa/speech.TextGrid
+  data: tests/local/control/CMF21/recordings/rainbow/sensors.txt
+  output: tests/local/control/CMF21/recordings/rainbow/processed/merged.csv
 
 
 # -----------------------------------------------------------------------------
@@ -218,3 +219,6 @@ columns:
 # sample frequency and editable subject-specific columns. process-csv reads it
 # automatically. Subject settings override shared corpus/textgrid/data values;
 # nonempty subject columns mappings extend/override the shared columns map.
+
+# Sensor-only reference export (no TextGrid):
+# skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control --recording silent_reference --sensor-only

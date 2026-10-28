@@ -45,6 +45,6 @@ whisperx:
   corpora: [AF19, AF20, AF21, AF22, AF23, AF24, AF25, AF26, AF27, AF28, AF29, AF30]
   input_dir: input
   wav_name: speech.wav
-# After WhisperX, convert its TextGrid and input/pos.txt into per-subject CSVs:
+# After WhisperX, convert its TextGrid and recordings/<id>/sensors.txt into per-recording CSVs:
 # skalspeech pipeline process-csv AF19 AF20 -c config.yaml --source whisper
 # This requires corpus.frequency in the supplied YAML (see config.example.yaml).

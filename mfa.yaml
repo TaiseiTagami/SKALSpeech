@@ -34,6 +34,6 @@ mfa:
   # tier as a separate speaker, so keep this to the tier(s) you want aligned:
   # [words], [sentences], or both.
   transcript_tiers: [words]
-# After MFA alignment, convert its TextGrid and input/pos.txt into per-subject CSVs:
+# After MFA alignment, convert its TextGrid and recordings/<id>/sensors.txt into per-recording CSVs:
 # skalspeech pipeline process-csv AF19 AF20 -c mfa.yaml --root tests/local/ALS
 # This also requires corpus.frequency in the supplied YAML (see config.example.yaml).

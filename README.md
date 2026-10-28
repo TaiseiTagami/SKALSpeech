@@ -59,7 +59,10 @@ From the project directory, the final command is:
 The same activation and installation notes are also available in
 [`help.md`](help.md).
 
-For the new multi-recording speaker layout and safe migration from legacy\n`input/output/processed` folders, see [recording layout](docs/recordings.md).\n\nDetailed documentation for every command is available in the
+For the current multi-recording layout and copy-only migration from legacy
+`input/output/processed` folders, see [recordings](docs/recordings.md).
+
+Detailed documentation for every command is available in the
 [`docs`](docs/README.md) folder.
 
 ## Running Commands
@@ -174,6 +177,10 @@ layout.
 ```powershell
 python main.py pipeline run output\rainbow.TextGrid data.txt result.csv config.yaml
 python main.py pipeline from-config config.yaml
+skalspeech collect CMF21 -c collect_control.yaml --recording-id rainbow
+skalspeech pipeline whisper CMF21 -c whisper.yaml --root tests/local/control --recording rainbow
+skalspeech pipeline mfa CMF21 -c mfa.yaml --root tests/local/control --recording rainbow
+skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control --recording silent_reference --sensor-only
 skalspeech pipeline process-csv CMF23 CMF24 -c config.yaml --root tests/local/control
 skalspeech pipeline process-csv CMF23 -c config.yaml --source whisper
 ```
