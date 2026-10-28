@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 import typer
 from praatio import textgrid
 
-from ..config import get_section, load_config
+from ..config import get_section, load_config, load_command_config
 from .recording_layout import recordings_for, recording_paths
 from .align_config import _option_arguments
 from .mfa import run_mfa_process
@@ -42,7 +42,7 @@ def whisper_pipeline_command(
     corpora: Optional[List[str]] = typer.Argument(
         None, help="Corpus names (e.g. CMF23) under the root, or full folder paths."
     ),
-    config: Path = typer.Option(..., "--config", "-c", help="YAML config."),
+    config: Optional[Path] = typer.Option(None, "--config", "-c", help="Optional YAML overrides."),
     root: Optional[Path] = typer.Option(
         None, "--root", "-r", help="Folder containing the corpora (e.g. tests\\local\\control)."
     ),
@@ -55,7 +55,7 @@ def whisper_pipeline_command(
     `corpora`, `input_dir` (default input) and `wav_name` (default speech.wav).
     Corpora that fail are reported and skipped; the exit code is 1 if any did.
     """
-    settings = get_section(load_config(config), "whisperx")
+    settings = get_section(load_command_config("whisper", config), "whisperx")
     failures = 0
     for corpus in _corpora(corpora, root, settings):
         for rid, folder, meta in recordings_for(corpus, recording):
@@ -114,7 +114,7 @@ def mfa_pipeline_command(
     `transcript_tiers` and `options`. Corpora that fail are reported and
     skipped; the exit code is 1 if any did.
     """
-    settings = get_section(load_config(config), "mfa")
+    settings = get_section(load_command_config("mfa", config), "mfa")
     for key in ("dictionary", "acoustic_model"):
         if not settings.get(key):
             raise typer.BadParameter(f"Config section 'mfa' needs '{key}'.")

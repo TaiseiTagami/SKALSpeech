@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 
 import typer
 
-from ..config import get_columns, get_section, load_config
+from ..config import get_columns, get_section, load_config, load_command_config
 from .corpus_pipelines import mfa_pipeline_command, whisper_pipeline_command
 from .process_csv import process_csv_command
 from .convert import _read_textgrid, _selected_tiers, _write_sampled_csv
@@ -101,7 +101,7 @@ def run_command(
     Frequency, tiers, delimiter and the column select/rename list are read
     from CONFIG_FILE (YAML).
     """
-    run_pipeline(textgrid_file, data_file, output_csv, load_config(config_file))
+    run_pipeline(textgrid_file, data_file, output_csv, load_command_config("pipeline", config_file))
 
 
 def _config_path(base: Path, files: Dict[str, Any], key: str) -> Path:
@@ -119,7 +119,7 @@ def from_config_command(config_file: Path) -> None:
     The 'files' section gives 'textgrid', 'data' and 'output' paths, resolved
     relative to the YAML file's folder.
     """
-    config = load_config(config_file)
+    config = load_command_config("pipeline", config_file)
     files = get_section(config, "files")
     base = config_file.resolve().parent
     run_pipeline(

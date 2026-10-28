@@ -1,9 +1,9 @@
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import typer
 
-from ..config import get_section, load_config
+from ..config import get_section, load_config, load_command_config
 from .mfa import run_mfa
 
 
@@ -27,15 +27,15 @@ def _option_arguments(options: Dict[str, Any]) -> List[str]:
 def align_config_command(
     corpus_directory: Path,
     output_directory: Path,
-    config: Path = typer.Option(
-        ..., "--config", "-c", help="YAML config with an `mfa` section."
+    config: Optional[Path] = typer.Option(
+        None, "--config", "-c", help="Optional YAML overrides for MFA."
     ),
 ) -> None:
     """Run `mfa align` with settings from a YAML config.
 
     Only the corpus and output folders are given on the command line.
     """
-    mfa = get_section(load_config(config), "mfa")
+    mfa = get_section(load_command_config("mfa", config), "mfa")
     for key in ("dictionary", "acoustic_model"):
         if not mfa.get(key):
             raise typer.BadParameter(f"Config section 'mfa' needs '{key}'.")

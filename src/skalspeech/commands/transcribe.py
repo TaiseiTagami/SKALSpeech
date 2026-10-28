@@ -7,7 +7,7 @@ from typing import Any, Dict, Optional
 
 import typer
 
-from ..config import get_section, load_config
+from ..config import get_section, load_config, load_command_config
 from ..whisperx_textgrid import json_file_to_textgrid
 from .align_config import _option_arguments
 
@@ -104,7 +104,7 @@ def transcribe_command(
     `model`, `align_model`, `language`, `device`, `compute_type`, `keep_json`,
     `options`) come from the `whisperx` section of the config.
     """
-    settings = get_section(load_config(config), "whisperx") if config else {}
+    settings = get_section(load_command_config("whisper", config), "whisperx")
     try:
         textgrid_path = transcribe_audio(audio_path, output_directory, settings)
     except RuntimeError as error:

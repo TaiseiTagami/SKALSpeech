@@ -55,3 +55,65 @@ def get_columns(config: Dict[str, Any]) -> Dict[str, Optional[str]]:
             )
         columns[str(name)] = new_name
     return columns
+
+
+# Only this directory supplies built-in command defaults. Never silently
+# recreate missing values in Python when a default YAML was edited/deleted.
+DEFAULT_CONFIG_DIR = Path(__file__).resolve().parents[2] / "config" / "default"
+
+
+def _merge_config(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+    result = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(result.get(key), dict):
+            result[key] = _merge_config(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+def _required_keys(config: Dict[str, Any], schema: Dict[str, Any], prefix: str = "") -> None:
+    for key, value in schema.items():
+        label = f"{prefix}.{key}" if prefix else key
+        if key not in config:
+            raise typer.BadParameter(f"Missing required default config key: {label}")
+        if isinstance(value, dict):
+            if not isinstance(config[key], dict):
+                raise typer.BadParameter(f"Default config key must be a mapping: {label}")
+            _required_keys(config[key], value, label)
+
+
+# Schemas are intentionally explicit: a deleted required default is an error,
+# even when a user-provided override happens to define the same key.
+DEFAULT_REQUIRED = {
+    "collect": {"collect": {"root": None, "audio_subdir": None, "identifier": None,
+        "output": None, "group": None, "frequency": None, "folders": None,
+        "wav_name": None, "pos_name": None, "recording_id": None, "recording_type": None}},
+    "mfa": {"mfa": {"dictionary": None, "acoustic_model": None, "options": {},
+        "root": None, "corpora": None, "input_dir": None, "output_dir": None,
+        "wav_name": None, "transcript_tiers": None}},
+    "whisper": {"whisperx": {"model": None, "align_model": None, "language": None,
+        "device": None, "compute_type": None, "keep_json": None,
+        "executable": None, "options": {}, "root": None, "corpora": None,
+        "input_dir": None, "wav_name": None}},
+    "process_csv": {"corpus": {"frequency": None}, "textgrid": {"tiers": None, "instances": None},
+        "data": {"delimiter": None}, "columns": {}, "process_csv": {
+        "root": None, "corpora": None, "input_dir": None, "mfa_output_dir": None,
+        "textgrid_name": None, "data_name": None, "output": None,
+        "textgrid": None, "data": None, "column_template": None}},
+    "pipeline": {"corpus": {"frequency": None}, "textgrid": {"tiers": None, "instances": None},
+        "data": {"delimiter": None}, "columns": {}, "files": {
+        "textgrid": None, "data": None, "output": None}},
+    "csv": {"columns": {}},
+}
+
+
+def load_command_config(command: str, override: Optional[Path] = None) -> Dict[str, Any]:
+    if command not in DEFAULT_REQUIRED:
+        raise typer.BadParameter(f"Unknown default configuration: {command}")
+    default_path = DEFAULT_CONFIG_DIR / f"{command}.yaml"
+    defaults = load_config(default_path)
+    _required_keys(defaults, DEFAULT_REQUIRED[command])
+    if override is None:
+        return defaults
+    return _merge_config(defaults, load_config(override))

@@ -4,7 +4,7 @@ from typing import List, Optional
 
 import typer
 
-from ..config import get_section, load_config
+from ..config import get_section, load_config, load_command_config
 from .corpus_pipelines import _corpora
 from .recording_layout import recordings_for, recording_paths, recording_config
 from .csv_commands import read_table_rows, select_and_rename_columns, write_rows
@@ -14,7 +14,7 @@ def process_csv_command(
     corpora: Optional[List[str]] = typer.Argument(
         None, help="Corpus names under --root, or full corpus paths."
     ),
-    config: Path = typer.Option(..., "--config", "-c", help="YAML config."),
+    config: Optional[Path] = typer.Option(None, "--config", "-c", help="Optional YAML overrides."),
     root: Optional[Path] = typer.Option(None, "--root", "-r", help="Corpus parent folder."),
     recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
     sensor_only: bool = typer.Option(False, '--sensor-only', help='Process sensor data without TextGrid; include reference recordings.'),
@@ -31,7 +31,7 @@ def process_csv_command(
     # Import lazily to avoid circular imports with pipeline.py.
     from .pipeline import run_pipeline
 
-    settings = load_config(config)
+    settings = load_command_config("process_csv", config)
     if source not in ("mfa", "whisper"):
         raise typer.BadParameter("--source must be 'mfa' or 'whisper'.")
     section = get_section(settings, "process_csv")
@@ -52,7 +52,7 @@ def process_csv_command(
     for corpus in _corpora(corpora, root, corpus_settings):
         for rid, folder, meta in recordings_for(corpus, recording, include_reference=sensor_only):
             try:
-                local_settings = recording_config(settings, corpus, folder, meta, config)
+                local_settings = recording_config(settings, corpus, folder, meta, config or (Path(__file__).resolve().parents[3] / "config/default/process_csv.yaml"))
                 input_directory, annotation_dir, processed_dir = recording_paths(folder, meta, source)
                 speaker_meta = load_config(corpus / "corpus.yaml") if (corpus / "corpus.yaml").is_file() else {}
                 recording_meta = load_config(folder / "recording.yaml") if (folder / "recording.yaml").is_file() else {}

@@ -5,7 +5,7 @@ from typing import Dict, List, Optional
 import typer
 import pandas as pd
 
-from ..config import get_columns, load_config
+from ..config import get_columns, load_config, load_command_config
 
 
 csv_app = typer.Typer(help="Commands for working with CSV files.")
@@ -142,7 +142,7 @@ def select_command(
           start: begin
           label:
     """
-    renames = get_columns(load_config(config_file))
+    renames = get_columns(load_command_config("csv", config_file))
     if not renames:
         raise typer.BadParameter("Config file's 'columns' section names no columns.")
     rows = select_and_rename_columns(_read_csv(input_csv), renames)

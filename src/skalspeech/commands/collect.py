@@ -18,7 +18,7 @@ from typing import List, Optional
 import typer
 import yaml
 
-from ..config import get_section, load_config
+from ..config import get_section, load_config, load_command_config
 
 
 def _find_one(parent: Path, matches, description: str) -> Path:
@@ -170,7 +170,7 @@ def collect_command(
     folders: Optional[List[str]] = typer.Argument(
         None, help="Subject folder prefixes, e.g. CMF17 CMF18."
     ),
-    config: Path = typer.Option(..., "--config", "-c", help="YAML config."),
+    config: Optional[Path] = typer.Option(None, "--config", "-c", help="Optional YAML overrides; defaults in config/default/collect.yaml."),
     identifier: Optional[str] = typer.Option(
         None, "--identifier", "-i", help="Keyword in the wav name, e.g. rainbow."
     ),
@@ -178,22 +178,14 @@ def collect_command(
     yaml_only: bool = typer.Option(False, "--yaml-only", help="Only write corpus.yaml for existing collected subjects."),
     column_template: Optional[Path] = typer.Option(None, "--column-template", help="Shared YAML column template to reference from each corpus.yaml."),
     recording_id: Optional[str] = typer.Option(None, "--recording-id", help="Recording ID (default: collect.identifier)."),
-    recording_type: str = typer.Option("speech", "--recording-type", help="speech or reference."),
+    recording_type: Optional[str] = typer.Option(None, "--recording-type", help="speech or reference."),
 ) -> None:
     """Copy each subject's keyword wav and pos file into the project layout.
 
     Subjects with no, or more than one, matching folder or wav are skipped
     with an error; the command exits non-zero if any were skipped.
     """
-    settings = get_section(load_config(config), "collect")
-    settings = {
-        "group": "Control",
-        "wav_name": "speech.wav",
-        "pos_name": "pos.txt",
-        "frequency": 250,
-        "audio_subdir": "",
-        **settings,
-    }
+    settings = get_section(load_command_config("collect", config), "collect")
     subjects = folders or settings.get("folders") or []
     identifier = identifier or settings.get("identifier")
     output = output or (Path(settings["output"]) if settings.get("output") else None)
@@ -211,9 +203,10 @@ def collect_command(
     if missing:
         raise typer.BadParameter(f"Missing: {', '.join(missing)} (CLI or config).")
 
+    recording_type = recording_type or settings["recording_type"]
     if recording_type not in ("speech", "reference"):
         raise typer.BadParameter("--recording-type must be speech or reference")
-    rid = recording_id or identifier
+    rid = recording_id or settings["recording_id"] or identifier
     if not rid or Path(rid).name != rid or "/" in rid or "\\" in rid or rid in (".", ".."):
         raise typer.BadParameter("Invalid recording ID")
     template_ref = None
