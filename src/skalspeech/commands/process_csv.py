@@ -8,7 +8,6 @@ from ..config import get_section, load_config
 from .corpus_pipelines import _corpora
 from .recording_layout import recordings_for, recording_paths, recording_config
 from .csv_commands import read_table_rows, select_and_rename_columns, write_rows
-from .pipeline import _frequency
 
 
 def process_csv_command(
@@ -91,6 +90,7 @@ def process_csv_command(
                     if not rows:
                         raise ValueError(f"Empty sensor table: {data}")
                     # Add the same zero-based sample timestamps used by TextGrid sampling.
+                    from .pipeline import _frequency
                     frequency = _frequency(local_settings)
                     if "time" not in rows[0]:
                         rows = [["time", *rows[0]]] + [[str(i / frequency), *row] for i, row in enumerate(rows[1:])]
