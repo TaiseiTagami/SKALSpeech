@@ -139,7 +139,7 @@ def collect_subject(
     if metadata_path.is_file():
         existing = load_config(metadata_path)
         # Preserve curated subject-specific values (particularly columns).
-        for key in ("corpus", "source", "files", "columns"):
+        for key in ("corpus", "files", "columns"):
             if key in existing:
                 metadata[key] = {**metadata.get(key, {}), **get_section(existing, key)}
         for key, value in existing.items():

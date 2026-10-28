@@ -85,3 +85,17 @@ TextGrid. The command does not add a time column. Without `--recording`,
 `--sensor-only` includes both speech and reference recordings. Collection
 still selects one matching source WAV per speaker per invocation; it does
 not automatically discover or classify numbered WAV files.
+
+## Architecture templates and snapshots
+
+New collections use `config/default/corpus_architecture.yaml` or an optional
+`architecture_template` in the command configuration. The resolved template
+is validated and saved in each speaker's `corpus.yaml` under `architecture`,
+including template provenance and checksum. Later template edits do not move
+existing files or change their saved paths. Explicit migration is required.
+
+Default paths are `recordings/{recording_id}/speech.wav`,
+`data/sensors.txt`, `annotations/transcription.TextGrid`,
+`annotations/alignment.TextGrid`, and `processed.csv`. Reference recordings
+have no TextGrid by default. Recording-level `architecture.files` can override
+specific paths without changing the speaker snapshot.

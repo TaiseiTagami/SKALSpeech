@@ -1,0 +1,15 @@
+# Default layout for newly collected corpora. Existing corpus.yaml snapshots win.
+architecture:
+  version: 1
+  corpus:
+    directory: "{corpus_id}"
+    metadata: corpus.yaml
+  recordings:
+    directory: "recordings/{recording_id}"
+    metadata: recording.yaml
+  files:
+    audio: speech.wav
+    sensors: data/sensors.txt
+    transcription: annotations/transcription.TextGrid
+    alignment: annotations/alignment.TextGrid
+    processed: processed.csv

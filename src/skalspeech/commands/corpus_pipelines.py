@@ -18,7 +18,7 @@ import typer
 from praatio import textgrid
 
 from ..config import get_section, load_config, load_command_config
-from .recording_layout import recordings_for, recording_paths, recording_file_names
+from .recording_layout import recordings_for, recording_paths, recording_file_names, architecture_files
 from .align_config import _option_arguments
 from .mfa import run_mfa_process
 from .transcribe import transcribe_audio
@@ -62,12 +62,19 @@ def whisper_pipeline_command(
             input_directory, annotation_dir, _ = recording_paths(folder, meta, "whisper")
             if meta.get("legacy"):
                 annotation_dir = input_directory
-            wav = input_directory / recording_file_names(folder, meta, settings)[0]
+            paths = architecture_files(corpus, rid, meta)
+            wav = paths["audio"] if paths else input_directory / recording_file_names(folder, meta, settings)[0]
+            if paths:
+                annotation_dir = paths["transcription"].parent
             try:
                 if not wav.is_file():
                     raise FileNotFoundError(f"Wav file not found: {wav}")
                 annotation_dir.mkdir(parents=True, exist_ok=True)
                 textgrid_path = transcribe_audio(wav, annotation_dir, settings)
+                if paths and textgrid_path != paths["transcription"]:
+                    paths["transcription"].parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(textgrid_path), str(paths["transcription"]))
+                    textgrid_path = paths["transcription"]
                 typer.echo(f"{corpus}/{rid}: wrote {textgrid_path}")
             except (OSError, RuntimeError, ValueError) as error:
                 failures += 1
@@ -131,7 +138,8 @@ def mfa_pipeline_command(
     for corpus in _corpora(corpora, root, settings):
         for rid, folder, meta in recordings_for(corpus, recording):
             input_directory, annotation_dir, _ = recording_paths(folder, meta, "mfa")
-            output_directory = folder / settings.get("output_dir", "output") if meta.get("legacy") else annotation_dir / "mfa"
+            paths = architecture_files(corpus, rid, meta)
+            output_directory = folder / settings.get("output_dir", "output") if meta.get("legacy") else (paths["alignment"].parent if paths else annotation_dir / "mfa")
             try:
                 if not input_directory.is_dir():
                     raise FileNotFoundError(f"{input_directory} not found")
@@ -146,13 +154,32 @@ def mfa_pipeline_command(
                             raise FileNotFoundError(f"Missing WAV or Whisper TextGrid for {rid}")
                         shutil.copyfile(wav, Path(staging) / wav.name)
                         # Stage only the selected transcript, never unrelated grids.
-                        _stage_corpus(annotation_dir, Path(staging), tiers)
+                        if paths:
+                            _stage_corpus_file(grid, Path(staging) / (wav.stem + ".TextGrid"), tiers)
+                        else:
+                            _stage_corpus(annotation_dir, Path(staging), tiers)
                     code = run_mfa_process("align", [staging, str(settings["dictionary"]),
                         str(settings["acoustic_model"]), str(output_directory), *_option_arguments(options)])
                 if code:
                     raise RuntimeError(f"MFA exited with code {code}")
+                if paths:
+                    produced = output_directory / (wav.stem + ".TextGrid")
+                    if produced.is_file() and produced != paths["alignment"]:
+                        paths["alignment"].parent.mkdir(parents=True, exist_ok=True)
+                        shutil.move(str(produced), str(paths["alignment"]))
                 typer.echo(f"{corpus}/{rid}: wrote {output_directory}")
             except (OSError, ValueError, RuntimeError) as error:
                 failures += 1
                 typer.echo(f"{corpus}/{rid}: SKIPPED - {error}", err=True)
     raise typer.Exit(1 if failures else 0)
+
+
+def _stage_corpus_file(source: Path, target: Path, tiers: List[str]) -> None:
+    grid = textgrid.openTextgrid(str(source), includeEmptyIntervals=True)
+    missing = [name for name in tiers if name not in grid.tierNames]
+    if missing:
+        raise ValueError(f"{source.name} has no tier(s): {', '.join(missing)}")
+    for name in list(grid.tierNames):
+        if name not in tiers:
+            grid.removeTier(name)
+    grid.save(str(target), format="long_textgrid", includeBlankSpaces=True)
