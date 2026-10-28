@@ -5,6 +5,7 @@ from typing import Optional
 import typer
 
 from ..config import load_config, get_section
+from .corpus_architecture import saved_architecture, recording_path, file_paths
 
 
 def recordings_for(speaker: Path, recording: Optional[str] = None, include_reference: bool = False):
@@ -28,7 +29,8 @@ def recordings_for(speaker: Path, recording: Optional[str] = None, include_refer
                 continue
             if not include_reference and entry.get("type", "speech") != "speech":
                 continue
-            folder = speaker / "recordings" / rid
+            architecture = saved_architecture(speaker)
+            folder = recording_path(speaker, rid, architecture) if architecture else speaker / "recordings" / rid
             local = load_config(folder / "recording.yaml") if (folder / "recording.yaml").is_file() else {}
             result.append((rid, folder, {**entry, **local}))
         if recording and not result:
@@ -78,3 +80,11 @@ def recording_file_names(folder: Path, metadata: dict, settings: dict):
         if not isinstance(name, str) or not name or Path(name).name != name:
             raise typer.BadParameter(f"Invalid recording filename: {name}")
     return wav, pos
+
+
+def architecture_files(speaker: Path, recording_id: str, metadata: dict):
+    """Resolve files from saved corpus architecture and recording overrides."""
+    architecture = saved_architecture(speaker)
+    if architecture is None:
+        return None
+    return file_paths(speaker, recording_id, architecture, metadata.get("architecture") if isinstance(metadata.get("architecture"), dict) else None)

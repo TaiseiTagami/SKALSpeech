@@ -6,7 +6,7 @@ import typer
 
 from ..config import get_section, load_config, load_command_config
 from .corpus_pipelines import _corpora
-from .recording_layout import recordings_for, recording_paths, recording_config
+from .recording_layout import recordings_for, recording_paths, recording_config, architecture_files
 from .csv_commands import read_table_rows, select_and_rename_columns, write_rows
 
 
@@ -60,11 +60,27 @@ def process_csv_command(
                 # Explicit process_csv paths take precedence over metadata.
                 file_settings = {**get_section(speaker_meta, "files"), **get_section(recording_meta, "files")}
                 path_settings = {**section, **get_section(speaker_meta, "process_csv"), **get_section(recording_meta, "process_csv")}
+                paths = architecture_files(corpus, rid, meta)
                 if meta.get("legacy"):
                     grid = corpus / grid_dir / grid_name
                     local_files = get_section(load_config(corpus / "corpus.yaml"), "files") if (corpus / "corpus.yaml").is_file() else {}
                     data = corpus / local_files.get("data", str(Path(input_dir) / data_name))
                     output = corpus / destination
+                elif paths:
+                    grid = paths["alignment"] if source == "mfa" else paths["transcription"]
+                    data = paths["sensors"]
+                    output = paths["processed"]
+                    for key, current in (("textgrid", grid), ("data", data), ("output", output)):
+                        if path_settings.get(key):
+                            resolved = Path(path_settings[key])
+                            if not resolved.is_absolute():
+                                resolved = folder / resolved
+                            if key == "textgrid":
+                                grid = resolved
+                            elif key == "data":
+                                data = resolved
+                            else:
+                                output = resolved
                 else:
                     # Relative paths resolve from the recording directory.
                     # Legacy speaker files entries such as input/pos.txt are
