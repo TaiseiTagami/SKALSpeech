@@ -62,7 +62,7 @@ def test_process_csv_recording_layout(tmp_path):
 def test_sensor_only_exports_reference_with_inherited_column_names(tmp_path):
     speaker = _speaker(tmp_path)
     config = tmp_path / "config.yaml"
-    config.write_text("textgrid:\\n  tiers: [words]\\n  instances: false\\n".replace("\\\\n", "\\n"))
+    config.write_text(yaml.safe_dump({"textgrid": {"tiers": ["words"], "instances": False}}))
     result = CliRunner().invoke(app, ["pipeline", "process-csv", str(speaker), "-c", str(config), "--recording", "silent", "--sensor-only"])
     assert result.exit_code == 0, result.output
     with (speaker / "recordings/silent/processed/merged.csv").open(newline="") as f:
