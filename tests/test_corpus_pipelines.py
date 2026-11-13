@@ -59,6 +59,9 @@ def test_mfa_pipeline_runs_each_corpus_and_skips_failures(tmp_path, monkeypatch)
         "m.zip",
         str(tmp_path / "A" / "output"),
         "--clean",
+        "--single_speaker",
+        "--num_jobs",
+        "4",
     ]
 
 
