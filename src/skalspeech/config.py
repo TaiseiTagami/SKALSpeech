@@ -113,6 +113,8 @@ def load_command_config(command: str, override: Optional[Path] = None) -> Dict[s
         raise typer.BadParameter(f"Unknown default configuration: {command}")
     default_path = DEFAULT_CONFIG_DIR / f"{command}.yaml"
     defaults = load_config(default_path)
+    if "architecture_template" not in defaults:
+        raise typer.BadParameter(f"Missing required default config key: architecture_template ({default_path})")
     _required_keys(defaults, DEFAULT_REQUIRED[command])
     if override is None:
         return defaults
