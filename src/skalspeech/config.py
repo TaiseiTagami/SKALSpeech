@@ -59,7 +59,7 @@ def get_columns(config: Dict[str, Any]) -> Dict[str, Optional[str]]:
 
 # Only this directory supplies built-in command defaults. Never silently
 # recreate missing values in Python when a default YAML was edited/deleted.
-DEFAULT_CONFIG_DIR = Path(__file__).resolve().parents[2] / "config" / "default"
+DEFAULT_CONFIG_DIR = Path.cwd() / "config" / "default"
 
 
 def _merge_config(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
