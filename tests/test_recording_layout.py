@@ -67,7 +67,7 @@ def test_sensor_only_exports_reference_with_inherited_column_names(tmp_path):
     assert result.exit_code == 0, result.output
     with (speaker / "recordings/silent/processed/merged.csv").open(newline="") as f:
         rows = list(csv.reader(f))
-    assert rows == [["tongue_x"], ["1"], ["2"]]
+    assert rows == [["tongue_x", "time_s"], ["1", "0.0"], ["2", "0.5"]]
 
 
 def test_sensor_only_all_includes_reference_and_speech(tmp_path):
@@ -95,4 +95,4 @@ def test_process_csv_custom_recording_paths(tmp_path):
         "-c", str(config), "--recording", "silent", "--sensor-only"])
     assert result.exit_code == 0, result.output
     with (folder / "exports/reference.csv").open(newline="") as f:
-        assert list(csv.reader(f)) == [["tongue_x"], ["3"], ["4"]]
+        assert list(csv.reader(f)) == [["tongue_x", "time_s"], ["3", "0.0"], ["4", "0.5"]]
