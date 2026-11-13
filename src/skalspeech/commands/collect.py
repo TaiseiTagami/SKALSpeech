@@ -159,7 +159,7 @@ def collect_subject(
     )
     recording_metadata = {"id": recording_id, "type": recording_type,
         "task": recording_id, "source": metadata["source"],
-        "files": {"wav": wav_name, "data": pos_name}, "columns": {}}
+        "files": {"wav": str(wav_target.relative_to(recording_dir)), "data": str(pos_target.relative_to(recording_dir))}, "columns": {}}
     if existing_recording:
         recording_metadata = {**existing_recording, **recording_metadata}
         recording_metadata["columns"] = get_section(existing_recording, "columns")
@@ -191,7 +191,8 @@ def collect_command(
     Subjects with no, or more than one, matching folder or wav are skipped
     with an error; the command exits non-zero if any were skipped.
     """
-    settings = get_section(load_command_config("collect", config), "collect")
+    loaded = load_command_config("collect", config)
+    settings = {**get_section(loaded, "collect"), "architecture_template": loaded.get("architecture_template"), "_config_file": config}
     subjects = folders or settings.get("folders") or []
     identifier = identifier or settings.get("identifier")
     output = output or (Path(settings["output"]) if settings.get("output") else None)
