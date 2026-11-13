@@ -54,6 +54,8 @@ def template_snapshot(config: dict, config_file: Optional[Path] = None) -> dict:
     if not path.is_absolute():
         base = config_file.parent if config_file else DEFAULT_CONFIG_DIR
         path = base / path
+        if template == "corpus_architecture.yaml" and not path.is_file():
+            path = _DEFAULT_TEMPLATE
     raw = load_config(path)
     architecture = deepcopy(validate_architecture(get_section(raw, "architecture")))
     architecture["template"] = str(path.resolve())
