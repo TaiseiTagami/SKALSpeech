@@ -1,2 +1,3 @@
+architecture_template: corpus_architecture.yaml
 # Default column selection for csv select. Set columns in -c YAML.
 columns: {}

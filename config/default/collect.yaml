@@ -1,3 +1,4 @@
+architecture_template: corpus_architecture.yaml
 # Required collection defaults. Missing file/key is a configuration error.
 collect:
   root: null              # Set in your own collect config

@@ -1,3 +1,4 @@
+architecture_template: corpus_architecture.yaml
 # Required batch CSV defaults. All paths for v2 are recording-relative.
 corpus:
   frequency: 250
