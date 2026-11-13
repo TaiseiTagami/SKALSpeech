@@ -99,3 +99,13 @@ Default paths are `recordings/{recording_id}/speech.wav`,
 `annotations/alignment.TextGrid`, and `processed.csv`. Reference recordings
 have no TextGrid by default. Recording-level `architecture.files` can override
 specific paths without changing the speaker snapshot.
+
+## Architecture snapshot
+
+The new layout is defined in `config/default/corpus_architecture.yaml`.
+Collection copies its validated layout into `corpus.yaml` as an architecture
+snapshot. The recording directory contains `speech.wav`, `data/sensors.txt`,
+`annotations/transcription.TextGrid`, `annotations/alignment.TextGrid`, and
+`processed.csv`. A reference recording has no TextGrid until one is generated.
+Changing the default template does not relocate existing files: their saved
+architecture remains authoritative until an explicit migration.
