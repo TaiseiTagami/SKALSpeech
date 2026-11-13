@@ -14,7 +14,7 @@ def migrate(speaker: Path, recording_id: str = "rainbow", apply: bool = False):
         raise FileExistsError(f"Refusing to overwrite {target}")
     operations = []
     for name, destination in (
-        ("speech.wav", "speech.wav"), ("pos.txt", "sensors.txt"),
+        ("speech.wav", "speech.wav"), ("pos.txt", "pos.txt"),
         ("speech.TextGrid", "annotations/speech.TextGrid"),
     ):
         if (source / name).is_file():

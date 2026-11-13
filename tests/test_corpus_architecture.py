@@ -21,12 +21,14 @@ def test_architecture_snapshot_and_second_recording(tmp_path):
                     settings, recording_id="rainbow")
     speaker = root / "CMF21"
     original = saved_architecture(speaker)
-    assert original["files"]["sensors"] == "data/sensors.txt"
-    assert (speaker / "recordings/rainbow/data/sensors.txt").is_file()
+    assert original["files"]["sensors"] == "pos.txt"
+    assert original["files"]["transcription"] == "annotations/transcription.TextGrid"
+    assert original["files"]["alignment"] == "annotations/alignment.TextGrid"
+    assert (speaker / "recordings/rainbow/pos.txt").is_file()
     collect_subject("CMF21", tmp_path / "source", "EMA/pos", "silent", root,
                     settings, recording_id="silent_reference", recording_type="reference")
     assert saved_architecture(speaker) == original
-    assert (speaker / "recordings/silent_reference/data/sensors.txt").is_file()
+    assert (speaker / "recordings/silent_reference/pos.txt").is_file()
     metadata = yaml.safe_load((speaker / "recordings/silent_reference/recording.yaml").read_text())
     assert metadata["source"]["identifier"] == "silent"
     assert metadata["source"]["wav"].endswith("silent.wav")

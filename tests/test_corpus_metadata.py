@@ -24,7 +24,7 @@ def test_collect_writes_corpus_yaml(tmp_path):
     assert metadata["source"]["wav"] == str((source / "rainbow.wav").resolve())
     assert metadata["recordings"] == [{"id": "rainbow", "type": "speech"}]
     assert (dest / "recordings" / "rainbow" / "speech.wav").is_file()
-    assert (dest / "recordings" / "rainbow" / "data" / "sensors.txt").is_file()
+    assert (dest / "recordings" / "rainbow" / "pos.txt").is_file()
     assert metadata["columns"] == {}
 
 

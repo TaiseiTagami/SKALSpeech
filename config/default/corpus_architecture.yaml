@@ -9,7 +9,7 @@ architecture:
     metadata: recording.yaml
   files:
     audio: speech.wav
-    sensors: data/sensors.txt
+    sensors: pos.txt
     transcription: annotations/transcription.TextGrid
     alignment: annotations/alignment.TextGrid
     processed: processed.csv

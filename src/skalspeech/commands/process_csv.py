@@ -19,14 +19,17 @@ def process_csv_command(
     recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
     sensor_only: bool = typer.Option(False, '--sensor-only', help='Process sensor data without TextGrid; include reference recordings.'),
     source: str = typer.Option(
-        "mfa", "--source", "-s", help="TextGrid source: mfa (output/) or whisper (input/)."
+        "mfa", "--source", "-s",
+        help="TextGrid source: architecture alignment/transcription for recording layouts; output/input for legacy.",
     ),
 ) -> None:
     """Generate analysis-ready CSVs for each corpus without rerunning alignment.
 
     Reads the same corpus/textgrid/data/columns settings as pipeline run.
-    By default uses MFA's output/speech.TextGrid, input/pos.txt and writes
-    processed/merged.csv. --source whisper uses input/speech.TextGrid.
+    For recording layouts, uses the configured TextGrid and recording-level
+    pos.txt by default, then writes processed/merged.csv. Legacy corpora use
+    output/speech.TextGrid and input/pos.txt. --source whisper uses the
+    Whisper TextGrid.
     """
     # Import lazily to avoid circular imports with pipeline.py.
     from .pipeline import run_pipeline
@@ -43,11 +46,13 @@ def process_csv_command(
     grid_dir = output_dir if source == "mfa" else input_dir
     grid_name = section.get("textgrid_name", Path(align_settings.get("wav_name", "speech.wav")).stem + ".TextGrid")
     data_name = section.get("data_name", "pos.txt")
-    destination = section["output"]
+    destination = section.get("output")
     for name, value in (("input_dir", input_dir), ("grid_dir", grid_dir),
-                        ("textgrid_name", grid_name), ("data_name", data_name), ("output", destination)):
+                        ("textgrid_name", grid_name), ("data_name", data_name)):
         if not isinstance(value, str) or not value:
             raise typer.BadParameter(f"process_csv {name} must be a nonempty string.")
+    if destination is not None and (not isinstance(destination, str) or not destination):
+        raise typer.BadParameter("process_csv output must be a nonempty string when specified.")
     failures = 0
     for corpus in _corpora(corpora, root, corpus_settings):
         for rid, folder, meta in recordings_for(corpus, recording, include_reference=sensor_only):
@@ -65,7 +70,7 @@ def process_csv_command(
                     grid = corpus / grid_dir / grid_name
                     local_files = get_section(load_config(corpus / "corpus.yaml"), "files") if (corpus / "corpus.yaml").is_file() else {}
                     data = corpus / local_files.get("data", str(Path(input_dir) / data_name))
-                    output = corpus / destination
+                    output = corpus / (destination or "processed/merged.csv")
                 elif paths:
                     grid = paths["alignment"] if source == "mfa" else paths["transcription"]
                     data = paths["sensors"]
@@ -89,10 +94,10 @@ def process_csv_command(
                     if Path(wav_name).parent != Path("."):
                         wav_name = Path(wav_name).name
                     default_grid = Path("annotations") / ("mfa" if source == "mfa" else "") / (Path(wav_name).stem + ".TextGrid")
-                    sensor_name = get_section(recording_meta, "files").get("data") or "sensors.txt"
+                    sensor_name = get_section(recording_meta, "files").get("data") or "pos.txt"
                     grid = folder / (path_settings.get("textgrid") or str(default_grid))
                     data = folder / (path_settings.get("data") or sensor_name)
-                    output = folder / (path_settings.get("output") or destination)
+                    output = folder / (path_settings.get("output") or destination or "processed/merged.csv")
                 if output.resolve() in (data.resolve(), grid.resolve()):
                     raise ValueError("Output path must not overwrite an input file.")
                 if not data.is_file():

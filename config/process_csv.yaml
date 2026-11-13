@@ -14,7 +14,6 @@ corpus:
 textgrid:
   tiers:
     - words
-    - phones
   instances: true
 
 # Sensor TXT settings
@@ -80,9 +79,7 @@ process_csv:
 # AF19/
 #   recordings/
 #     rainbow/
-#       processed/
-#         merged.csv
+#       processed.csv
 #     silent_reference/
-#       processed/
-#         merged.csv
+#       processed.csv
 # =============================================================================

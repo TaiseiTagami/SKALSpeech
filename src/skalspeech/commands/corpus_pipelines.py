@@ -2,8 +2,8 @@
 
 Each corpus follows the `collect` layout:
 
-    <corpus>/input/speech.wav      -> WhisperX writes <corpus>/input/speech.TextGrid
-    <corpus>/input                 -> MFA writes <corpus>/output
+    Recording layouts resolve WAV and TextGrid paths from the saved corpus
+    architecture. Legacy corpora retain input/output directory behavior.
 
 MFA treats each TextGrid tier as a speaker, so only the configured tiers are
 staged (default: words) rather than aligning the raw input folder.
@@ -48,12 +48,11 @@ def whisper_pipeline_command(
     ),
     recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
 ) -> None:
-    """Run WhisperX on each corpus and write a words/sentences TextGrid.
+    """Run WhisperX and write the TextGrid to the architecture transcription path.
 
-    Reads `<corpus>/<input_dir>/<wav_name>` and writes the TextGrid next to it.
-    Settings come from the `whisperx` config section, which also accepts
-    `corpora`, `input_dir` (default input) and `wav_name` (default speech.wav).
-    Corpora that fail are reported and skipped; the exit code is 1 if any did.
+    Recording layouts use the saved architecture's audio and transcription
+    paths. Legacy layouts use `<input_dir>/<wav_name>` and write next to the
+    WAV. Corpora that fail are reported and skipped; exit code is 1 if any did.
     """
     settings = get_section(load_command_config("whisper", config), "whisperx")
     failures = 0
@@ -111,15 +110,11 @@ def mfa_pipeline_command(
     ),
     recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
 ) -> None:
-    """Run `mfa align` on each corpus using settings from the config.
+    """Run `mfa align` and write TextGrids to the architecture alignment path.
 
-    Aligns `<corpus>/<input_dir>` into `<corpus>/<output_dir>`. Only the
-    TextGrid tiers in `transcript_tiers` (default: words) are given to MFA,
-    since MFA would otherwise treat every tier as a separate speaker. The `mfa`
-    config section needs `dictionary` and `acoustic_model`, and accepts
-    `corpora`, `input_dir` (default input), `output_dir` (default output),
-    `transcript_tiers` and `options`. Corpora that fail are reported and
-    skipped; the exit code is 1 if any did.
+    Recording layouts use the architecture's WAV, transcription, and alignment
+    paths. Legacy layouts use `<input_dir>` and `<output_dir>`. Only the
+    configured `transcript_tiers` (default: words) are given to MFA.
     """
     settings = get_section(load_command_config("mfa", config), "mfa")
     for key in ("dictionary", "acoustic_model"):

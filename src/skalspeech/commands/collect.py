@@ -3,8 +3,8 @@
 For each subject ID the output is:
 
     <output>/<ID>/info.txt
-    <output>/<ID>/input/<wav_name>
-    <output>/<ID>/input/<pos_name>
+    <output>/<ID>/recordings/<recording_id>/speech.wav
+    <output>/<ID>/recordings/<recording_id>/pos.txt
 
 Settings live in the `collect` config section; folders, identifier and output
 can also be given on the command line.

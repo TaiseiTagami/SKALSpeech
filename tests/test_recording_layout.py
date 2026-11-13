@@ -7,7 +7,8 @@ from praatio.utilities.constants import Interval
 from typer.testing import CliRunner
 from skalspeech.cli import app
 from skalspeech.commands import corpus_pipelines
-from skalspeech.commands.recording_layout import recordings_for
+from skalspeech.commands.corpus_architecture import template_snapshot
+from skalspeech.commands.recording_layout import architecture_files, recordings_for
 
 def _speaker(root):
     speaker = root / "CMF21"
@@ -15,7 +16,7 @@ def _speaker(root):
         folder = speaker / "recordings" / rid
         folder.mkdir(parents=True)
         (folder / "speech.wav").write_bytes(b"wav")
-        (folder / "sensors.txt").write_text("Ch1_X\n1\n2\n")
+        (folder / "pos.txt").write_text("Ch1_X\n1\n2\n")
         (folder / "recording.yaml").write_text(yaml.safe_dump({"id": rid, "type": kind}))
     (speaker / "corpus.yaml").write_text(yaml.safe_dump({
         "schema_version": 2, "corpus": {"frequency": 2},
@@ -28,18 +29,89 @@ def test_recording_selection_skips_reference(tmp_path):
     assert [rid for rid, _, _ in recordings_for(speaker)] == ["rainbow"]
     assert len(recordings_for(speaker, include_reference=True)) == 2
 
+
+def test_architecture_honors_recording_sensor_file_override(tmp_path):
+    speaker = _speaker(tmp_path)
+    manifest = yaml.safe_load((speaker / "corpus.yaml").read_text())
+    manifest["architecture"] = template_snapshot({})
+    (speaker / "corpus.yaml").write_text(yaml.safe_dump(manifest))
+    recording_yaml = speaker / "recordings" / "rainbow" / "recording.yaml"
+    recording_metadata = yaml.safe_load(recording_yaml.read_text())
+    recording_metadata["files"] = {"data": "pos.txt"}
+    recording_yaml.write_text(yaml.safe_dump(recording_metadata))
+
+    recording, folder, metadata = recordings_for(speaker, "rainbow")[0]
+    paths = architecture_files(speaker, recording, metadata)
+
+    assert paths["sensors"] == folder / "pos.txt"
+
+
 def test_whisper_uses_recording_annotation_dir(tmp_path, monkeypatch):
     speaker = _speaker(tmp_path)
+    manifest_path = speaker / "corpus.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text())
+    manifest["architecture"] = template_snapshot({})
+    manifest["architecture"]["files"]["transcription"] = "annotations/custom_transcript.TextGrid"
+    manifest["architecture"]["files"]["alignment"] = "annotations/custom_alignment.TextGrid"
+    manifest_path.write_text(yaml.safe_dump(manifest))
     calls = []
+
     def fake(wav, out, settings):
         calls.append((wav, out))
-        return out / "speech.TextGrid"
+        generated = out / "speech.TextGrid"
+        generated.write_text("transcript")
+        return generated
+
     monkeypatch.setattr(corpus_pipelines, "transcribe_audio", fake)
     config = tmp_path / "config.yaml"
     config.write_text("whisperx: {}\n")
     result = CliRunner().invoke(app, ["pipeline", "whisper", str(speaker), "-c", str(config)])
     assert result.exit_code == 0, result.output
     assert calls == [(speaker / "recordings/rainbow/speech.wav", speaker / "recordings/rainbow/annotations")]
+    assert (speaker / "recordings/rainbow/annotations/custom_transcript.TextGrid").is_file()
+    assert not (speaker / "recordings/rainbow/annotations/speech.TextGrid").exists()
+
+
+def test_mfa_and_process_csv_use_architecture_annotation_filenames(tmp_path, monkeypatch):
+    speaker = _speaker(tmp_path)
+    manifest_path = speaker / "corpus.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text())
+    manifest["architecture"] = template_snapshot({})
+    manifest["architecture"]["files"]["transcription"] = "annotations/custom_transcript.TextGrid"
+    manifest["architecture"]["files"]["alignment"] = "annotations/custom_alignment.TextGrid"
+    manifest_path.write_text(yaml.safe_dump(manifest))
+
+    transcript = speaker / "recordings/rainbow/annotations/custom_transcript.TextGrid"
+    transcript.parent.mkdir(parents=True)
+    grid = textgrid.Textgrid()
+    grid.addTier(IntervalTier("words", [Interval(0, 1, "rainbow")], 0, 1))
+    grid.save(str(transcript), format="long_textgrid", includeBlankSpaces=True)
+
+    def fake_mfa(command, arguments):
+        staging = Path(arguments[0])
+        output = Path(arguments[3])
+        output.mkdir(parents=True, exist_ok=True)
+        (output / "speech.TextGrid").write_bytes((staging / "speech.TextGrid").read_bytes())
+        return 0
+
+    monkeypatch.setattr(corpus_pipelines, "run_mfa_process", fake_mfa)
+    config = tmp_path / "mfa.yaml"
+    config.write_text("mfa:\n  dictionary: dict\n  acoustic_model: model\n")
+    result = CliRunner().invoke(
+        app, ["pipeline", "mfa", str(speaker), "-c", str(config)]
+    )
+    assert result.exit_code == 0, result.output
+    alignment = speaker / "recordings/rainbow/annotations/custom_alignment.TextGrid"
+    assert alignment.is_file()
+    assert not (speaker / "recordings/rainbow/annotations/speech.TextGrid").exists()
+
+    csv_config = tmp_path / "process.yaml"
+    csv_config.write_text("corpus:\n  frequency: 2\ntextgrid:\n  tiers: [words]\n")
+    result = CliRunner().invoke(
+        app, ["pipeline", "process-csv", str(speaker), "-c", str(csv_config)]
+    )
+    assert result.exit_code == 0, result.output
+    assert (speaker / "recordings/rainbow/processed.csv").is_file()
 
 def test_process_csv_recording_layout(tmp_path):
     speaker = _speaker(tmp_path)

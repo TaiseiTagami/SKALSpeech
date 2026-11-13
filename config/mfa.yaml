@@ -56,7 +56,7 @@ mfa:
 #   recordings/
 #     rainbow/
 #       speech.wav
-#       pos.txt (or sensors.txt in the current v2 implementation)
+#       pos.txt
 #       annotations/
 #         speech.TextGrid
 #         mfa/

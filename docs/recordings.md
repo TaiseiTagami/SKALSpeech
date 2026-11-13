@@ -2,7 +2,7 @@
 
 A speaker owns a `corpus.yaml` with subject/group/frequency, column templates,
 sensor mappings and a `recordings` registry. Every recording has its own
-`recording.yaml`, `speech.wav`, `sensors.txt`, `annotations/` and
+`recording.yaml`, `speech.wav`, `pos.txt`, `annotations/` and
 `processed/`. Reference recordings use `type: reference` and are skipped by
 speech processing by default. IDs should be unique within each speaker, e.g.
 `rainbow_001`, `rainbow_002`, `silent_reference`.
@@ -14,15 +14,15 @@ tests/local/control/CMF21/
     rainbow/
       recording.yaml
       speech.wav
-      sensors.txt
+      pos.txt
       annotations/
         speech.TextGrid
         mfa/speech.TextGrid
-      processed/merged.csv
+      processed.csv
     silent_reference/
       recording.yaml
       speech.wav
-      sensors.txt
+      pos.txt
 ```
 
 `collect` accepts `--recording-id` and `--recording-type speech|reference`.
@@ -36,9 +36,10 @@ collected recording files to exist and never copies them.
 for the speaker. Existing legacy speaker input/output/processed folders remain
 readable until migration. `process-csv` applies shared settings, speaker
 metadata and recording-specific overrides, with recording columns highest
-priority. Whisper writes to `annotations/speech.TextGrid`, MFA writes to
-`annotations/mfa/speech.TextGrid`, and processed CSV goes to
-`processed/merged.csv`.
+priority. Whisper, MFA, and CSV processing use the saved architecture's transcription,
+alignment, and processed paths. The defaults are
+`annotations/transcription.TextGrid`, `annotations/alignment.TextGrid`, and
+`processed.csv`, respectively.
 
 ## Migrating existing collected data
 
@@ -65,7 +66,7 @@ reference's sensor measurements into an analysis CSV, use:
 skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control --recording silent_reference --sensor-only
 ```
 
-The resulting `recordings/silent_reference/processed/merged.csv` uses the
+The resulting `recordings/silent_reference/processed.csv` uses the
 speaker and recording column mappings and requires no TextGrid.
 
 ## Reference recordings and sensor-only processing
@@ -80,7 +81,7 @@ with inherited column mappings, run:
 skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control --recording silent_reference --sensor-only
 ```
 
-This writes `recordings/silent_reference/processed/merged.csv` without a
+This writes `recordings/silent_reference/processed.csv` without a
 TextGrid. The command does not add a time column. Without `--recording`,
 `--sensor-only` includes both speech and reference recordings. Collection
 still selects one matching source WAV per speaker per invocation; it does
@@ -95,7 +96,7 @@ including template provenance and checksum. Later template edits do not move
 existing files or change their saved paths. Explicit migration is required.
 
 Default paths are `recordings/{recording_id}/speech.wav`,
-`data/sensors.txt`, `annotations/transcription.TextGrid`,
+`pos.txt` at the recording root, `annotations/transcription.TextGrid`,
 `annotations/alignment.TextGrid`, and `processed.csv`. Reference recordings
 have no TextGrid by default. Recording-level `architecture.files` can override
 specific paths without changing the speaker snapshot.
@@ -104,7 +105,7 @@ specific paths without changing the speaker snapshot.
 
 The new layout is defined in `config/default/corpus_architecture.yaml`.
 Collection copies its validated layout into `corpus.yaml` as an architecture
-snapshot. The recording directory contains `speech.wav`, `data/sensors.txt`,
+snapshot. The recording directory contains `speech.wav`, `pos.txt`,
 `annotations/transcription.TextGrid`, `annotations/alignment.TextGrid`, and
 `processed.csv`. A reference recording has no TextGrid until one is generated.
 Changing the default template does not relocate existing files: their saved

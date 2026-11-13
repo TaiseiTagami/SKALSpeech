@@ -8,3 +8,4 @@ collect:
   pos_name: pos.txt
   frequency: 250
   folders: [AF19, AF20, AF21, AF22, AF23, AF24, AF25, AF26, AF27, AF28, AF29, AF30]
+  

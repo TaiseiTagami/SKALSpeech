@@ -75,7 +75,7 @@ def recording_file_names(folder: Path, metadata: dict, settings: dict):
     """Use recording metadata first, then command defaults."""
     files = get_section(metadata, "files")
     wav = files.get("wav") or settings["wav_name"]
-    pos = files.get("data") or settings.get("pos_name", "sensors.txt")
+    pos = files.get("data") or settings.get("pos_name", "pos.txt")
     for name in (wav, pos):
         if not isinstance(name, str) or not name or Path(name).name != name:
             raise typer.BadParameter(f"Invalid recording filename: {name}")
@@ -87,4 +87,19 @@ def architecture_files(speaker: Path, recording_id: str, metadata: dict):
     architecture = saved_architecture(speaker)
     if architecture is None:
         return None
-    return file_paths(speaker, recording_id, architecture, metadata.get("architecture") if isinstance(metadata.get("architecture"), dict) else None)
+    paths = file_paths(
+        speaker,
+        recording_id,
+        architecture,
+        metadata.get("architecture") if isinstance(metadata.get("architecture"), dict) else None,
+    )
+    folder = recording_path(speaker, recording_id, architecture)
+    files = get_section(metadata, "files")
+    for metadata_key, architecture_key in (("wav", "audio"), ("data", "sensors")):
+        value = files.get(metadata_key)
+        if value is not None:
+            if not isinstance(value, str) or not value:
+                raise typer.BadParameter(f"Invalid recording files.{metadata_key}: {value}")
+            path = Path(value)
+            paths[architecture_key] = path if path.is_absolute() else folder / path
+    return paths

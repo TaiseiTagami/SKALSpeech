@@ -3,7 +3,7 @@ architecture_template: corpus_architecture.yaml
 corpus:
   frequency: 250
 textgrid:
-  tiers: [words, phones]
+  tiers: [words]
   instances: true
 data:
   delimiter: "\t"
@@ -15,7 +15,7 @@ process_csv:
   mfa_output_dir: output
   textgrid_name: speech.TextGrid
   data_name: pos.txt
-  output: processed/merged.csv
+  output: null             # null = architecture output path, or legacy default
   textgrid: null          # null = infer annotation path
-  data: null              # null = recording metadata / sensors.txt
+  data: null              # null = recording metadata / pos.txt
   column_template: null
