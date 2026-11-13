@@ -9,6 +9,7 @@ from .commands.environment import environment_app
 from .commands.mfa import mfa_command
 from .commands.pipeline import pipeline_app
 from .commands.slice import slice_command
+from .commands.sensor_mapping import map_columns_command
 from .commands.transcribe import forced_align_command, transcribe_command
 from .version import version_command
 
@@ -17,6 +18,7 @@ app = typer.Typer(help="Tools for speech recordings and Praat TextGrids.")
 app.command("version")(version_command)
 app.command("slice")(slice_command)
 app.command("collect")(collect_command)
+app.command("map-columns")(map_columns_command)
 app.command("transcribe")(transcribe_command)
 app.command("forced-align")(forced_align_command)
 app.command(

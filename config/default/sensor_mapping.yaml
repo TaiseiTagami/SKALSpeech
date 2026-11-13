@@ -1,0 +1,19 @@
+# Ordered sensor names expected after filtering inactive EMA channels.
+sensor_mapping:
+  sensor_order: [lr, rr, mr, pt, tt, ll, ul, jc, jm]
+  fields:
+    X: x
+    Y: y
+    Z: z
+    phi: phi
+    theta: theta
+    RMS: rms
+  annotation_columns:
+    - time
+    - words
+    - words_int
+    - words_instance
+    - phones
+    - phones_int
+    - phones_instance
+  delimiter: "\t"

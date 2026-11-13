@@ -2,8 +2,8 @@
 
 Each corpus follows the `collect` layout:
 
-    <corpus>/input/speech.wav      -> WhisperX writes <corpus>/input/speech.TextGrid
-    <corpus>/input                 -> MFA writes <corpus>/output
+    Recording layouts resolve WAV and TextGrid paths from the saved corpus
+    architecture. Legacy corpora retain input/output directory behavior.
 
 MFA treats each TextGrid tier as a speaker, so only the configured tiers are
 staged (default: words) rather than aligning the raw input folder.
@@ -18,7 +18,7 @@ import typer
 from praatio import textgrid
 
 from ..config import get_section, load_config, load_command_config
-from .recording_layout import recordings_for, recording_paths, recording_file_names
+from .recording_layout import recordings_for, recording_paths, recording_file_names, architecture_files
 from .align_config import _option_arguments
 from .mfa import run_mfa_process
 from .transcribe import transcribe_audio
@@ -48,12 +48,11 @@ def whisper_pipeline_command(
     ),
     recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
 ) -> None:
-    """Run WhisperX on each corpus and write a words/sentences TextGrid.
+    """Run WhisperX and write the TextGrid to the architecture transcription path.
 
-    Reads `<corpus>/<input_dir>/<wav_name>` and writes the TextGrid next to it.
-    Settings come from the `whisperx` config section, which also accepts
-    `corpora`, `input_dir` (default input) and `wav_name` (default speech.wav).
-    Corpora that fail are reported and skipped; the exit code is 1 if any did.
+    Recording layouts use the saved architecture's audio and transcription
+    paths. Legacy layouts use `<input_dir>/<wav_name>` and write next to the
+    WAV. Corpora that fail are reported and skipped; exit code is 1 if any did.
     """
     settings = get_section(load_command_config("whisper", config), "whisperx")
     failures = 0
@@ -62,12 +61,19 @@ def whisper_pipeline_command(
             input_directory, annotation_dir, _ = recording_paths(folder, meta, "whisper")
             if meta.get("legacy"):
                 annotation_dir = input_directory
-            wav = input_directory / recording_file_names(folder, meta, settings)[0]
+            paths = architecture_files(corpus, rid, meta)
+            wav = paths["audio"] if paths else input_directory / recording_file_names(folder, meta, settings)[0]
+            if paths:
+                annotation_dir = paths["transcription"].parent
             try:
                 if not wav.is_file():
                     raise FileNotFoundError(f"Wav file not found: {wav}")
                 annotation_dir.mkdir(parents=True, exist_ok=True)
                 textgrid_path = transcribe_audio(wav, annotation_dir, settings)
+                if paths and textgrid_path != paths["transcription"]:
+                    paths["transcription"].parent.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(textgrid_path), str(paths["transcription"]))
+                    textgrid_path = paths["transcription"]
                 typer.echo(f"{corpus}/{rid}: wrote {textgrid_path}")
             except (OSError, RuntimeError, ValueError) as error:
                 failures += 1
@@ -104,15 +110,11 @@ def mfa_pipeline_command(
     ),
     recording: Optional[str] = typer.Option(None, "--recording", help="Only this recording ID."),
 ) -> None:
-    """Run `mfa align` on each corpus using settings from the config.
+    """Run `mfa align` and write TextGrids to the architecture alignment path.
 
-    Aligns `<corpus>/<input_dir>` into `<corpus>/<output_dir>`. Only the
-    TextGrid tiers in `transcript_tiers` (default: words) are given to MFA,
-    since MFA would otherwise treat every tier as a separate speaker. The `mfa`
-    config section needs `dictionary` and `acoustic_model`, and accepts
-    `corpora`, `input_dir` (default input), `output_dir` (default output),
-    `transcript_tiers` and `options`. Corpora that fail are reported and
-    skipped; the exit code is 1 if any did.
+    Recording layouts use the architecture's WAV, transcription, and alignment
+    paths. Legacy layouts use `<input_dir>` and `<output_dir>`. Only the
+    configured `transcript_tiers` (default: words) are given to MFA.
     """
     settings = get_section(load_command_config("mfa", config), "mfa")
     for key in ("dictionary", "acoustic_model"):
@@ -131,7 +133,8 @@ def mfa_pipeline_command(
     for corpus in _corpora(corpora, root, settings):
         for rid, folder, meta in recordings_for(corpus, recording):
             input_directory, annotation_dir, _ = recording_paths(folder, meta, "mfa")
-            output_directory = folder / settings.get("output_dir", "output") if meta.get("legacy") else annotation_dir / "mfa"
+            paths = architecture_files(corpus, rid, meta)
+            output_directory = folder / settings.get("output_dir", "output") if meta.get("legacy") else (paths["alignment"].parent if paths else annotation_dir / "mfa")
             try:
                 if not input_directory.is_dir():
                     raise FileNotFoundError(f"{input_directory} not found")
@@ -140,19 +143,38 @@ def mfa_pipeline_command(
                         _stage_corpus(input_directory, Path(staging), tiers)
                     else:
                         # Stage only the paired audio and Whisper transcript.
-                        wav = input_directory / settings.get("wav_name", "speech.wav")
-                        grid = annotation_dir / (wav.stem + ".TextGrid")
+                        wav = paths["audio"] if paths else input_directory / recording_file_names(folder, meta, settings)[0]
+                        grid = paths["transcription"] if paths else annotation_dir / (wav.stem + ".TextGrid")
                         if not wav.is_file() or not grid.is_file():
                             raise FileNotFoundError(f"Missing WAV or Whisper TextGrid for {rid}")
                         shutil.copyfile(wav, Path(staging) / wav.name)
                         # Stage only the selected transcript, never unrelated grids.
-                        _stage_corpus(annotation_dir, Path(staging), tiers)
+                        if paths:
+                            _stage_corpus_file(grid, Path(staging) / (wav.stem + ".TextGrid"), tiers)
+                        else:
+                            _stage_corpus(annotation_dir, Path(staging), tiers)
                     code = run_mfa_process("align", [staging, str(settings["dictionary"]),
                         str(settings["acoustic_model"]), str(output_directory), *_option_arguments(options)])
                 if code:
                     raise RuntimeError(f"MFA exited with code {code}")
+                if paths:
+                    produced = output_directory / (wav.stem + ".TextGrid")
+                    if produced.is_file() and produced != paths["alignment"]:
+                        paths["alignment"].parent.mkdir(parents=True, exist_ok=True)
+                        shutil.move(str(produced), str(paths["alignment"]))
                 typer.echo(f"{corpus}/{rid}: wrote {output_directory}")
             except (OSError, ValueError, RuntimeError) as error:
                 failures += 1
                 typer.echo(f"{corpus}/{rid}: SKIPPED - {error}", err=True)
     raise typer.Exit(1 if failures else 0)
+
+
+def _stage_corpus_file(source: Path, target: Path, tiers: List[str]) -> None:
+    grid = textgrid.openTextgrid(str(source), includeEmptyIntervals=True)
+    missing = [name for name in tiers if name not in grid.tierNames]
+    if missing:
+        raise ValueError(f"{source.name} has no tier(s): {', '.join(missing)}")
+    for name in list(grid.tierNames):
+        if name not in tiers:
+            grid.removeTier(name)
+    grid.save(str(target), format="long_textgrid", includeBlankSpaces=True)

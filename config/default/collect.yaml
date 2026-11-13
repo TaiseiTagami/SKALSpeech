@@ -1,3 +1,4 @@
+architecture_template: corpus_architecture.yaml
 # Required collection defaults. Missing file/key is a configuration error.
 collect:
   root: null              # Set in your own collect config
@@ -8,6 +9,6 @@ collect:
   frequency: 250
   folders: []
   wav_name: speech.wav
-  pos_name: sensors.txt
+  pos_name: pos.txt
   recording_id: null      # null = use identifier
   recording_type: speech

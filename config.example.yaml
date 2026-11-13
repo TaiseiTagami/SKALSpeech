@@ -24,7 +24,7 @@
 # collect: copy each subject's keyword wav + position file into the project
 # layout.   skalspeech collect CMF17 CMF18 -c config.yaml
 # Result: <output>/<ID>/corpus.yaml and recordings/<identifier>/
-#         speech.wav, sensors.txt and recording.yaml
+#         speech.wav, pos.txt and recording.yaml
 # -----------------------------------------------------------------------------
 collect:
   # Folder that contains the subject folders (CMF17_07242024, ...).
@@ -43,7 +43,7 @@ collect:
   # Where the per-subject folders are written.
   output: 'tests\local\control'
 
-  # Legacy filename keys; v2 writes speech.wav and sensors.txt.
+  # Legacy filename keys; v2 writes speech.wav and pos.txt.
   wav_name: speech.wav
   pos_name: pos.txt
 
@@ -176,7 +176,7 @@ process_csv:
 # -----------------------------------------------------------------------------
 files:
   textgrid: tests/local/control/CMF21/recordings/rainbow/annotations/mfa/speech.TextGrid
-  data: tests/local/control/CMF21/recordings/rainbow/sensors.txt
+  data: tests/local/control/CMF21/recordings/rainbow/pos.txt
   output: tests/local/control/CMF21/recordings/rainbow/processed/merged.csv
 
 

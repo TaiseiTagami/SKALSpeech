@@ -81,6 +81,12 @@ def run_pipeline(
 
     renames = get_columns(config)
     if renames:
+        available = set(merged[0])
+        renames = {
+            name: target
+            for name, target in renames.items()
+            if target is not None or name in available
+        }
         merged = select_and_rename_columns(merged, renames)
 
     write_rows(output_csv, merged)

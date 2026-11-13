@@ -1,5 +1,4 @@
-# Current objective: centralized required defaults
+# Current plan
 
-- Add config/default YAMLs and strict validation for missing defaults.
-- Integrate collect, WhisperX, MFA, CSV and single-file config consumers.
-- Add regression tests, update documentation, verify CI.
+- Confirm the architecture branch's full GitHub Actions pytest result.
+- Fix any remaining failing tests and verify the final SHA before merging PR #7.

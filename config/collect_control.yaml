@@ -8,7 +8,12 @@ collect:
   audio_subdir: 'EMA\pos'
 
   # Default recording to collect
-  identifier: rainbow
+  #identifier: rainbow # Rainbow passage
+
+  ## Silence
+  identifier: '0001' # Silence
+  recording_id: silence
+  recording_type: reference
 
   # Destination for collected speaker data
   output: tests/local/control
@@ -33,6 +38,6 @@ collect:
     - CMF30
 
   # Legacy compatibility settings
-  # Version 2 always stores files as speech.wav and sensors.txt
+  # Version 2 always stores files as speech.wav and pos.txt
   wav_name: speech.wav
-  pos_name: sensors.txt
+  pos_name: pos.txt

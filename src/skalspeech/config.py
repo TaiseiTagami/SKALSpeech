@@ -59,7 +59,7 @@ def get_columns(config: Dict[str, Any]) -> Dict[str, Optional[str]]:
 
 # Only this directory supplies built-in command defaults. Never silently
 # recreate missing values in Python when a default YAML was edited/deleted.
-DEFAULT_CONFIG_DIR = Path(__file__).resolve().parents[2] / "config" / "default"
+DEFAULT_CONFIG_DIR = Path.cwd() / "config" / "default"
 
 
 def _merge_config(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
@@ -113,6 +113,8 @@ def load_command_config(command: str, override: Optional[Path] = None) -> Dict[s
         raise typer.BadParameter(f"Unknown default configuration: {command}")
     default_path = DEFAULT_CONFIG_DIR / f"{command}.yaml"
     defaults = load_config(default_path)
+    if "architecture_template" not in defaults:
+        raise typer.BadParameter(f"Missing required default config key: architecture_template ({default_path})")
     _required_keys(defaults, DEFAULT_REQUIRED[command])
     if override is None:
         return defaults

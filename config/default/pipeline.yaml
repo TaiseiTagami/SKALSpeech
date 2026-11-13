@@ -1,3 +1,4 @@
+architecture_template: corpus_architecture.yaml
 # Defaults for single-file pipeline run and from-config.
 corpus:
   frequency: 250

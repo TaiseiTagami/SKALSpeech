@@ -1,3 +1,4 @@
+architecture_template: corpus_architecture.yaml
 # Required MFA defaults. Paths may be overridden in -c YAML.
 mfa:
   dictionary: models/dictionary/english_us_arpa.dict

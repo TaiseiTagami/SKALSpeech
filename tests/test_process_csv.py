@@ -36,3 +36,27 @@ def test_process_csv_reports_missing_files(tmp_path: Path):
     result = CliRunner().invoke(app, ["pipeline", "process-csv", "A", "-c", str(config), "-r", str(tmp_path)])
     assert result.exit_code == 1
     assert "SKIPPED" in result.output
+
+
+def test_process_csv_skips_optional_null_mappings_for_absent_tiers(tmp_path: Path):
+    corpus = tmp_path / "CMF23"
+    (corpus / "input").mkdir(parents=True)
+    (corpus / "output").mkdir()
+    (corpus / "input" / "pos.txt").write_text("Ch1_X\n1\n2\n", encoding="utf-8")
+    grid = textgrid.Textgrid()
+    grid.addTier(IntervalTier("words", [Interval(0, 1, "rainbow")], 0, 1))
+    grid.save(str(corpus / "output" / "speech.TextGrid"), format="long_textgrid", includeBlankSpaces=True)
+    config = tmp_path / "config.yaml"
+    config.write_text(
+        "corpus:\n  frequency: 2\n"
+        "textgrid:\n  tiers: [words]\n  instances: false\n"
+        "columns:\n  words: null\n  phones: null\n  Ch1_X: sensor\n",
+        encoding="utf-8",
+    )
+
+    result = CliRunner().invoke(
+        app,
+        ["pipeline", "process-csv", "CMF23", "-c", str(config), "-r", str(tmp_path)],
+    )
+
+    assert result.exit_code == 0, result.output

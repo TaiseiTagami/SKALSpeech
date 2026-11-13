@@ -12,7 +12,7 @@ skalspeech collect CMF21 -c collect_control.yaml --yaml-only --recording-id rain
 ```
 
 Collect one matching WAV and sensor TXT per speaker into
-`<speaker>/recordings/<id>/speech.wav` and `sensors.txt`, plus speaker
+`<speaker>/recordings/<id>/speech.wav` and `pos.txt`, plus speaker
 `corpus.yaml` and recording `recording.yaml`. Options:
 `--config/-c`, `--identifier/-i`, `--output/-o`,
 `--recording-id`, `--recording-type`, `--yaml-only`,
@@ -36,9 +36,9 @@ skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control 
 skalspeech pipeline process-csv CMF21 -c config.yaml --root tests/local/control --recording silent_reference --sensor-only
 ```
 
-TextGrid mode merges annotations with `sensors.txt`; sensor-only mode
-does not require a TextGrid and includes references. Both write
-`recordings/<id>/processed/merged.csv`. Column renames inherit from
+TextGrid mode merges annotations with `pos.txt`; sensor-only mode
+does not require a TextGrid and includes references. Both write to the saved architecture's processed path (`processed.csv` by
+default). Column renames inherit from
 shared YAML, templates, speaker and recording metadata.
 See [pipeline](docs/pipeline.md).
 

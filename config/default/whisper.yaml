@@ -1,3 +1,4 @@
+architecture_template: corpus_architecture.yaml
 # Required WhisperX defaults.
 whisperx:
   model: models/whisper/small
