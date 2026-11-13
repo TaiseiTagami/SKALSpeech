@@ -148,8 +148,8 @@ def mfa_pipeline_command(
                         _stage_corpus(input_directory, Path(staging), tiers)
                     else:
                         # Stage only the paired audio and Whisper transcript.
-                        wav = input_directory / settings.get("wav_name", "speech.wav")
-                        grid = annotation_dir / (wav.stem + ".TextGrid")
+                        wav = paths["audio"] if paths else input_directory / recording_file_names(folder, meta, settings)[0]
+                        grid = paths["transcription"] if paths else annotation_dir / (wav.stem + ".TextGrid")
                         if not wav.is_file() or not grid.is_file():
                             raise FileNotFoundError(f"Missing WAV or Whisper TextGrid for {rid}")
                         shutil.copyfile(wav, Path(staging) / wav.name)
